@@ -62,6 +62,8 @@
 
   "Bar_NothingSelected": "Nichts ausgewählt",
   "Bar_Selected": "{0} ausgewählt",
+  "Bar_SelectedOne": "1 ausgewählt",
+  "Bar_SelectedWithUpdate": "{0} ausgewählt · 1 Update",
   "Bar_SelectedWithUpdates": "{0} ausgewählt · {1} Updates",
   "Bar_Ready": "Bereit",
   "Bar_Install": "Installieren",

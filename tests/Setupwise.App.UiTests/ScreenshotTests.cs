@@ -79,7 +79,7 @@ public class ScreenshotTests
     {
         if (File.Exists(AppPaths.CategoriesFile)) File.Delete(AppPaths.CategoriesFile); // every run starts without own categories
         Loc.Instance.Load(language);
-        ApplicationThemeManager.Apply(theme, WindowBackdropType.None, false);
+        ApplicationThemeManager.Apply(theme, WindowBackdropType.None, true); // like ThemeService
 
         using var http = new HttpClient();
         var settings = new AppSettings { LoadIcons = false, CheckForAppUpdates = false };

@@ -193,7 +193,9 @@ public sealed partial class MainViewModel : ObservableObject
         var count = _store.Selected.Count;
         var updates = _store.Selected.Count(i => i.HasUpdate);
         SelectionText = count == 0 ? Loc.T("Bar_NothingSelected")
-            : updates > 0 ? Loc.F("Bar_SelectedWithUpdates", count, updates)
+            : count == 1 && updates == 0 ? Loc.T("Bar_SelectedOne")
+            : updates == 1 ? Loc.F("Bar_SelectedWithUpdate", count)
+            : updates > 1 ? Loc.F("Bar_SelectedWithUpdates", count, updates)
             : Loc.F("Bar_Selected", count);
         _selectionNav.BadgeCount = count;
         InstallCommand.NotifyCanExecuteChanged();
