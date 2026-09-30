@@ -6,7 +6,6 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) and 
 ## [Unreleased]
 
 ### Added
-- Code signing via SignPath Foundation in the release workflow (app files and installer).
 - Privacy policy, shown during installation in English and German.
 
 ## [0.1.0] - 2026-09-30

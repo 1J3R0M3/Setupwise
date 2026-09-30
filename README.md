@@ -40,7 +40,7 @@ Prefer no installer? Use the **portable zip** from the same page.
 
 **Requirements:** Windows 10 (1809) or Windows 11, x64, and the *App Installer* from the Microsoft Store (preinstalled on current Windows versions; Setupwise tells you if it is missing).
 
-> **Note:** Setupwise is a young project, so Windows SmartScreen may still show a warning until the app has built up reputation. Choose *More info → Run anyway*. You can verify the download with `SHA256SUMS.txt`.
+> **Note:** Releases are not code-signed, so Windows SmartScreen may show a warning. Choose *More info → Run anyway*. You can verify the download with `SHA256SUMS.txt`.
 
 ## How it works
 
@@ -49,13 +49,6 @@ Setupwise is a graphical front end for [`winget`](https://learn.microsoft.com/wi
 ## Contributing
 
 Contributions are very welcome – especially **new apps for the catalog** and **translations**. Neither requires C# knowledge. See [CONTRIBUTING.md](CONTRIBUTING.md).
-
-## Code signing policy
-
-Free code signing provided by [SignPath.io](https://about.signpath.io), certificate by [SignPath Foundation](https://signpath.org).
-Details, team roles and what is signed: [CODE_SIGNING.md](CODE_SIGNING.md).
-
-> **Status:** the application with SignPath Foundation is in progress. Releases up to 0.1.0 are not signed yet.
 
 ## Privacy
 

@@ -70,8 +70,3 @@ Release files (installer needs [Inno Setup](https://jrsoftware.org/isinfo.php) o
 1. Update `VersionPrefix` in `Directory.Build.props` and the `CHANGELOG.md`.
 2. Commit, then `git tag v<version> && git push origin v<version>`.
 3. The *Release* workflow builds, tests and publishes installer, portable zip and checksums.
-4. With code signing set up, the workflow pauses twice for approval in SignPath (app files, then installer).
-
-Code signing needs the repository variable `SIGNPATH_ORGANIZATION_ID` and the secret `SIGNPATH_API_TOKEN`
-(optional variables: `SIGNPATH_PROJECT_SLUG`, default `Setupwise`; `SIGNPATH_SIGNING_POLICY_SLUG`, default `release-signing`).
-The artifact configurations for SignPath are in [`.signpath/artifact-configurations`](.signpath/artifact-configurations).
