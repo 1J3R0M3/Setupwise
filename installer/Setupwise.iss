@@ -58,8 +58,8 @@ CloseApplications=yes
 ChangesAssociations=yes
 
 [Languages]
-Name: "english"; MessagesFile: "compiler:Default.isl"
-Name: "german"; MessagesFile: "compiler:Languages\German.isl"
+Name: "english"; MessagesFile: "compiler:Default.isl"; InfoBeforeFile: "privacy.en.txt"
+Name: "german"; MessagesFile: "compiler:Languages\German.isl"; InfoBeforeFile: "privacy.de.txt"
 
 [CustomMessages]
 english.AssociateFiles=Open Setupwise selections (*.setupwise) with {#AppName}

@@ -1,0 +1,22 @@
+﻿Privacy
+
+Setupwise has no telemetry, no analytics, no account and no servers of its own.
+
+It connects to the internet only for:
+
+  * Installing, updating and searching apps - through winget (part of
+    Windows), only when you ask for it.
+
+  * App icons - Setupwise loads the homepage and icon of each app from the
+    vendor's own website. This transfers your IP address to that website.
+    Turn off: Settings > Privacy > Load app icons
+
+  * Update check - at startup Setupwise asks GitHub (api.github.com) whether
+    a newer version exists. This transfers your IP address to GitHub.
+    Turn off: Settings > Privacy > Check for Setupwise updates
+
+Settings, logs and cached icons stay on your PC
+(%APPDATA%\Setupwise and %LOCALAPPDATA%\Setupwise).
+
+Full privacy policy:
+https://github.com/1J3R0M3/Setupwise/blob/main/PRIVACY.md

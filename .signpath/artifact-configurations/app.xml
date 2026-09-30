@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- SignPath artifact configuration "app" (slug: app).
+     Signs only Setupwise's own binaries; the .NET runtime files keep Microsoft's signatures.
+     Keep in sync with the SignPath project settings (copy the content there). -->
+<artifact-configuration xmlns="http://signpath.io/artifact-configuration/v1">
+  <zip-file>
+    <pe-file path="Setupwise.exe" product-name="Setupwise">
+      <authenticode-sign />
+    </pe-file>
+    <pe-file path="Setupwise.dll" product-name="Setupwise">
+      <authenticode-sign />
+    </pe-file>
+    <pe-file path="Setupwise.Core.dll" product-name="Setupwise">
+      <authenticode-sign />
+    </pe-file>
+  </zip-file>
+</artifact-configuration>

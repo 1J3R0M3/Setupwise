@@ -1,0 +1,25 @@
+﻿Datenschutz
+
+Setupwise hat keine Telemetrie, keine Nutzungsanalyse, kein Konto und keine
+eigenen Server.
+
+Eine Internetverbindung wird nur genutzt für:
+
+  * Programme installieren, aktualisieren und suchen - über winget (Teil von
+    Windows), nur wenn du es auslöst.
+
+  * Programm-Icons - Setupwise lädt Startseite und Icon eines Programms von
+    der Website des jeweiligen Herstellers. Dabei wird deine IP-Adresse an
+    diese Website übertragen.
+    Abschalten: Einstellungen > Datenschutz > Programm-Icons laden
+
+  * Update-Prüfung - beim Start fragt Setupwise bei GitHub (api.github.com)
+    nach einer neueren Version. Dabei wird deine IP-Adresse an GitHub
+    übertragen.
+    Abschalten: Einstellungen > Datenschutz > Nach Setupwise-Updates suchen
+
+Einstellungen, Protokolle und Icons bleiben auf deinem PC
+(%APPDATA%\Setupwise und %LOCALAPPDATA%\Setupwise).
+
+Vollständige Datenschutzerklärung:
+https://github.com/1J3R0M3/Setupwise/blob/main/PRIVACY.md

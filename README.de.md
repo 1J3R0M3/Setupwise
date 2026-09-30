@@ -34,11 +34,22 @@ Lieber ohne Installation? Dann die **portable ZIP** von derselben Seite nehmen.
 
 **Voraussetzungen:** Windows 10 (1809) oder Windows 11, x64, sowie der *App-Installer* aus dem Microsoft Store (auf aktuellen Windows-Versionen vorinstalliert; Setupwise meldet sich, falls er fehlt).
 
-> **Hinweis:** Die Releases sind noch nicht signiert, daher kann Windows SmartScreen warnen. Dann *Weitere Informationen → Trotzdem ausführen* wählen. Den Download kannst du mit `SHA256SUMS.txt` prüfen.
+> **Hinweis:** Setupwise ist ein junges Projekt, daher kann Windows SmartScreen noch warnen, bis die App genug Reputation aufgebaut hat. Dann *Weitere Informationen → Trotzdem ausführen* wählen. Den Download kannst du mit `SHA256SUMS.txt` prüfen.
 
 ## Mitmachen
 
 Beiträge sind sehr willkommen – besonders **neue Programme für den Katalog** und **Übersetzungen**. Dafür braucht man keine C#-Kenntnisse. Siehe [CONTRIBUTING.md](CONTRIBUTING.md) (auf Englisch).
+
+## Code signing policy
+
+Free code signing provided by [SignPath.io](https://about.signpath.io), certificate by [SignPath Foundation](https://signpath.org).
+Kostenlose Code-Signierung durch SignPath.io, Zertifikat von der SignPath Foundation. Details, Rollen und was signiert wird: [CODE_SIGNING.md](CODE_SIGNING.md).
+
+> **Status:** Der Antrag bei der SignPath Foundation läuft. Releases bis einschließlich 0.1.0 sind noch nicht signiert.
+
+## Datenschutz
+
+Keine Telemetrie, kein Konto. Setupwise kontaktiert nur die Websites der Hersteller (für Icons) und GitHub (für die Update-Prüfung) – beides abschaltbar. Siehe [Datenschutzerklärung](PRIVACY.md#datenschutzerklärung).
 
 ## Lizenz
 
