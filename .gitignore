@@ -1,1 +1,17 @@
+# Build output
+bin/
+obj/
+artifacts/
+publish/
+installer/Output/
+TestResults/
+
+# IDEs
+.vs/
+.vscode/
+.idea/
+*.user
+*.suo
+
+# Runtime files of the legacy PowerShell version
 Installationsprotokoll.txt

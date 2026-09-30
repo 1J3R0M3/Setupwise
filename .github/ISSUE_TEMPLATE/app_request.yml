@@ -1,0 +1,34 @@
+name: Suggest an app
+description: Propose an app for the Setupwise catalog
+labels: [catalog]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Even faster: add it yourself with a pull request – see [CONTRIBUTING.md](../blob/main/CONTRIBUTING.md#1-add-an-app-to-the-catalog).
+  - type: input
+    id: name
+    attributes:
+      label: App name
+    validations:
+      required: true
+  - type: input
+    id: id
+    attributes:
+      label: winget id
+      description: Find it with `winget search <name>`
+      placeholder: "Vendor.App"
+    validations:
+      required: true
+  - type: dropdown
+    id: category
+    attributes:
+      label: Category
+      options: [Browsers, Communication, Office & PDF, Media, Gaming, Development, Utilities, New category]
+    validations:
+      required: true
+  - type: textarea
+    id: why
+    attributes:
+      label: Why should it be in the catalog?
+      description: Who needs it on a new PC?

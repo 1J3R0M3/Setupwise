@@ -1,0 +1,35 @@
+name: Bug report
+description: Something does not work as expected
+labels: [bug]
+body:
+  - type: textarea
+    id: what
+    attributes:
+      label: What happened?
+      description: What did you do, what did you expect, and what happened instead?
+    validations:
+      required: true
+  - type: input
+    id: version
+    attributes:
+      label: Setupwise version
+      description: Settings → About
+      placeholder: "0.1.0"
+    validations:
+      required: true
+  - type: input
+    id: windows
+    attributes:
+      label: Windows version
+      placeholder: "Windows 11 24H2"
+  - type: input
+    id: winget
+    attributes:
+      label: winget version
+      description: Settings → About, or `winget --version`
+  - type: textarea
+    id: log
+    attributes:
+      label: Log
+      description: Settings → Advanced → Log files. Paste the relevant lines (remove anything private).
+      render: text

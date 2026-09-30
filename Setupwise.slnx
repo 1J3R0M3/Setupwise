@@ -1,0 +1,9 @@
+<Solution>
+  <Folder Name="/src/">
+    <Project Path="src/Setupwise.App/Setupwise.App.csproj" />
+    <Project Path="src/Setupwise.Core/Setupwise.Core.csproj" />
+  </Folder>
+  <Folder Name="/tests/">
+    <Project Path="tests/Setupwise.Core.Tests/Setupwise.Core.Tests.csproj" />
+  </Folder>
+</Solution>

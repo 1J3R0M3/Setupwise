@@ -1,0 +1,23 @@
+<Project>
+  <!-- Shared settings for all projects -->
+  <PropertyGroup>
+    <VersionPrefix>0.1.0</VersionPrefix>
+    <Product>Setupwise</Product>
+    <Company>Setupwise contributors</Company>
+    <Copyright>Copyright © 2026 Setupwise contributors</Copyright>
+    <RepositoryUrl>https://github.com/1J3R0M3/Setupwise</RepositoryUrl>
+    <PackageLicenseExpression>GPL-3.0-or-later</PackageLicenseExpression>
+
+    <LangVersion>latest</LangVersion>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
+    <AnalysisLevel>latest-recommended</AnalysisLevel>
+    <!-- UI strings are localized via Setupwise.App/Localization, not via resource analyzers -->
+    <NoWarn>$(NoWarn);CA1303;CA1848;CA1860;CA1031</NoWarn>
+
+    <!-- Allows building the Windows app on Linux/macOS (CI, development) -->
+    <EnableWindowsTargeting>true</EnableWindowsTargeting>
+    <Deterministic>true</Deterministic>
+  </PropertyGroup>
+</Project>

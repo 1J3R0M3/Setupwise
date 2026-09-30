@@ -1,0 +1,91 @@
+<UserControl x:Class="Setupwise.App.Views.HomeView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:ui="http://schemas.lepo.co/wpfui/2022/xaml"
+             xmlns:vm="clr-namespace:Setupwise.App.ViewModels"
+             xmlns:loc="clr-namespace:Setupwise.App.Localization"
+             xmlns:controls="clr-namespace:Setupwise.App.Views.Controls"
+             mc:Ignorable="d"
+             d:DataContext="{d:DesignInstance vm:HomeViewModel}">
+  <ScrollViewer VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
+    <StackPanel Margin="32,24,32,24">
+      <TextBlock Text="{loc:Tr Home_Title}" Style="{StaticResource PageTitle}" />
+      <TextBlock Text="{loc:Tr Home_Subtitle}" Style="{StaticResource PageSubtitle}" MaxWidth="720" HorizontalAlignment="Left" />
+
+      <TextBlock Text="{loc:Tr Home_Profiles}" Style="{StaticResource SectionHeader}" />
+      <ItemsControl ItemsSource="{Binding Profiles}" Focusable="False">
+        <ItemsControl.ItemsPanel>
+          <ItemsPanelTemplate>
+            <WrapPanel />
+          </ItemsPanelTemplate>
+        </ItemsControl.ItemsPanel>
+        <ItemsControl.ItemTemplate>
+          <DataTemplate DataType="{x:Type vm:ProfileViewModel}">
+            <Border Width="300" Margin="0,0,12,12" Style="{StaticResource Card}">
+              <DockPanel>
+                <DockPanel DockPanel.Dock="Top">
+                  <Border Width="40" Height="40" CornerRadius="8" Background="{DynamicResource AccentFillColorDefaultBrush}">
+                    <ui:SymbolIcon Symbol="{Binding Symbol}" FontSize="22" Filled="True"
+                                   Foreground="{DynamicResource TextOnAccentFillColorPrimaryBrush}" />
+                  </Border>
+                  <StackPanel Margin="12,0,0,0" VerticalAlignment="Center">
+                    <TextBlock Text="{Binding Name}" FontSize="16" FontWeight="SemiBold"
+                               Foreground="{DynamicResource TextFillColorPrimaryBrush}" />
+                    <TextBlock Text="{Binding AppCountText}" Style="{StaticResource Caption}" />
+                  </StackPanel>
+                </DockPanel>
+
+                <ui:Button DockPanel.Dock="Bottom" HorizontalAlignment="Stretch" Content="{Binding ButtonText}" Command="{Binding ToggleCommand}">
+                  <ui:Button.Style>
+                    <Style TargetType="ui:Button" BasedOn="{StaticResource {x:Type ui:Button}}">
+                      <Setter Property="Appearance" Value="Primary" />
+                      <Setter Property="Icon" Value="{ui:SymbolIcon Add24}" />
+                      <Style.Triggers>
+                        <DataTrigger Binding="{Binding IsFullySelected}" Value="True">
+                          <Setter Property="Appearance" Value="Secondary" />
+                          <Setter Property="Icon" Value="{ui:SymbolIcon Checkmark24}" />
+                        </DataTrigger>
+                      </Style.Triggers>
+                    </Style>
+                  </ui:Button.Style>
+                </ui:Button>
+
+                <ItemsControl DockPanel.Dock="Bottom" Margin="0,0,0,14" ItemsSource="{Binding Apps}" Focusable="False">
+                  <ItemsControl.ItemsPanel>
+                    <ItemsPanelTemplate>
+                      <WrapPanel />
+                    </ItemsPanelTemplate>
+                  </ItemsControl.ItemsPanel>
+                  <ItemsControl.ItemTemplate>
+                    <DataTemplate>
+                      <controls:PackageTile Size="24" Margin="0,0,6,6" ToolTip="{Binding Name}" />
+                    </DataTemplate>
+                  </ItemsControl.ItemTemplate>
+                </ItemsControl>
+
+                <TextBlock Margin="0,12,0,12" Text="{Binding Description}" TextWrapping="Wrap"
+                           Foreground="{DynamicResource TextFillColorSecondaryBrush}" />
+              </DockPanel>
+            </Border>
+          </DataTemplate>
+        </ItemsControl.ItemTemplate>
+      </ItemsControl>
+
+      <TextBlock Text="{loc:Tr Home_Transfer}" Style="{StaticResource SectionHeader}" Margin="0,16,0,10" />
+      <Border Style="{StaticResource Card}" MaxWidth="924" HorizontalAlignment="Left">
+        <DockPanel>
+          <ui:SymbolIcon DockPanel.Dock="Left" Symbol="ArrowSync24" FontSize="28" Margin="0,0,18,0"
+                         Foreground="{DynamicResource AccentTextFillColorPrimaryBrush}" />
+          <StackPanel DockPanel.Dock="Right" Orientation="Horizontal" VerticalAlignment="Center" Margin="24,0,0,0">
+            <ui:Button Content="{loc:Tr Home_Import}" Icon="{ui:SymbolIcon FolderOpen24}" Command="{Binding ImportCommand}" />
+            <ui:Button Margin="8,0,0,0" Content="{loc:Tr Home_Export}" Icon="{ui:SymbolIcon Save24}" Command="{Binding ExportCommand}" />
+          </StackPanel>
+          <TextBlock VerticalAlignment="Center" Text="{loc:Tr Home_TransferText}" TextWrapping="Wrap"
+                     Foreground="{DynamicResource TextFillColorSecondaryBrush}" />
+        </DockPanel>
+      </Border>
+    </StackPanel>
+  </ScrollViewer>
+</UserControl>

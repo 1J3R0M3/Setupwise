@@ -1,0 +1,13 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <RootNamespace>Setupwise.Core</RootNamespace>
+    <Description>Platform-independent core of Setupwise: catalog, winget integration, icons, selections.</Description>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <InternalsVisibleTo Include="Setupwise.Core.Tests" />
+  </ItemGroup>
+
+</Project>
