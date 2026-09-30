@@ -1,0 +1,5 @@
+# Windows-Skripte muessen CRLF behalten (Batch-Dateien brechen sonst),
+# die BOM in Installer.ps1 bleibt als Dateiinhalt ohnehin erhalten.
+*.ps1 text eol=crlf
+*.bat text eol=crlf
+*.cmd text eol=crlf
