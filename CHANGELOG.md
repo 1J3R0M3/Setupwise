@@ -5,6 +5,8 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) and 
 
 ## [Unreleased]
 
+## [0.2.0] - 2026-09-30
+
 ### Added
 - Own categories: create, rename and delete them; add apps via right-click on any app card;
   save the current selection as a category.
@@ -18,6 +20,8 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) and 
 
 ### Fixed
 - The settings page was empty.
+- Correct singular texts for one selected app or one update.
+- Readable status labels in dark mode.
 
 ## [0.1.0] - 2026-09-30
 
