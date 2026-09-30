@@ -77,7 +77,7 @@ public class ScreenshotTests
 
     private static void RenderRun(Application app, string language, ApplicationTheme theme)
     {
-        File.Delete(AppPaths.CategoriesFile); // every run starts without own categories
+        if (File.Exists(AppPaths.CategoriesFile)) File.Delete(AppPaths.CategoriesFile); // every run starts without own categories
         Loc.Instance.Load(language);
         ApplicationThemeManager.Apply(theme, WindowBackdropType.None, false);
 
