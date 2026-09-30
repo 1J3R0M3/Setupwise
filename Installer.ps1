@@ -72,8 +72,8 @@ namespace WingetGui
         private string _status = "", _statusKind = "";
         private bool _isChecked;
 
-        public string Name             { get { return _name; }       set { _name = value ?? ""; Raise("Name"); } }
-        public string Id               { get { return _id; }         set { _id = value ?? ""; Raise("Id"); } }
+        public string Name             { get { return _name; }       set { _name = value ?? ""; Raise("Name"); Raise("Initial"); } }
+        public string Id               { get { return _id; }         set { _id = value ?? ""; Raise("Id"); Raise("TileColor"); } }
         public string Version          { get { return _version; }    set { _version = value ?? ""; Raise("Version"); Raise("VersionText"); } }
         public string AvailableVersion { get { return _available; }  set { _available = value ?? ""; Raise("AvailableVersion"); Raise("VersionText"); } }
         public string Action           { get { return _action; }     set { _action = value ?? "install"; Raise("Action"); Raise("VersionText"); } }
@@ -84,6 +84,38 @@ namespace WingetGui
         {
             get { return _isChecked; }
             set { if (_isChecked == value) return; _isChecked = value; Raise("IsChecked"); }
+        }
+
+        // Programm-Icon (ImageSource); null = Ersatzkachel mit Anfangsbuchstaben
+        private object _icon;
+        public object Icon { get { return _icon; } set { _icon = value; Raise("Icon"); } }
+
+        public string Initial
+        {
+            get
+            {
+                foreach (char c in _name) if (char.IsLetterOrDigit(c)) return char.ToUpperInvariant(c).ToString();
+                return "?";
+            }
+        }
+
+        private static readonly string[] Palette = {
+            "#0078D4", "#8764B8", "#038387", "#CA5010", "#498205",
+            "#C239B3", "#4F6BED", "#986F0B", "#E3008C", "#00838F"
+        };
+
+        // Stabile Farbe pro Paket-ID (string.GetHashCode ist nicht stabil)
+        public string TileColor
+        {
+            get
+            {
+                unchecked
+                {
+                    uint h = 17;
+                    foreach (char c in _id.ToLowerInvariant()) h = h * 31 + c;
+                    return Palette[h % (uint)Palette.Length];
+                }
+            }
         }
 
         public string VersionText
@@ -146,6 +178,15 @@ $wingetVersion = $wingetVersion.Trim()
 $useModule = [bool](Get-Module -ListAvailable -Name Microsoft.WinGet.Client -ErrorAction SilentlyContinue)
 
 $logFile = Join-Path $LogDir 'Installationsprotokoll.txt'
+
+# ==================================================
+# Programm-Icons: werden von der Homepage des Pakets geladen (winget
+# liefert keine Icons mit) und lokal zwischengespeichert. Dabei wird nur
+# die Website des jeweiligen Herstellers kontaktiert, kein Drittanbieter.
+# $false = keine Webzugriffe, stattdessen farbige Kacheln mit Anfangsbuchstaben.
+# ==================================================
+$EnableIcons = $true
+$iconDir = Join-Path $env:LOCALAPPDATA 'WingetInstaller\IconCache'
 
 # ==================================================
 # 4) Programmkatalog – hier Programme ergänzen oder entfernen
@@ -387,6 +428,122 @@ foreach ($it in $items) {
     Send-Msg @{ Type = 'progress'; Value = [double]($done / $total * 100) }
 }
 Send-Msg @{ Type = 'installDone'; Ok = $okCount; Fail = $failCount; Skipped = $total - $done }
+'@
+
+# Läuft dauerhaft im Hintergrund und arbeitet Icon-Anfragen ab
+# (Stapel: zuletzt angefragte Pakete, z. B. die sichtbare Seite, zuerst).
+$IconJob = @'
+try { [Net.ServicePointManager]::SecurityProtocol = [Net.ServicePointManager]::SecurityProtocol -bor [Net.SecurityProtocolType]::Tls12 } catch { }
+
+function Get-WebBytes([string]$Url, [int]$MaxBytes = 1MB) {
+    $req = [System.Net.HttpWebRequest][System.Net.WebRequest]::Create($Url)
+    $req.UserAgent = 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/126.0 Safari/537.36'
+    $req.Timeout = 6000
+    $req.ReadWriteTimeout = 6000
+    $req.AutomaticDecompression = [System.Net.DecompressionMethods]::GZip -bor [System.Net.DecompressionMethods]::Deflate
+    $resp = $req.GetResponse()
+    try {
+        $stream = $resp.GetResponseStream()
+        $ms = New-Object System.IO.MemoryStream
+        $buf = New-Object byte[] 65536
+        while (($n = $stream.Read($buf, 0, $buf.Length)) -gt 0) {
+            $ms.Write($buf, 0, $n)
+            if ($ms.Length -gt $MaxBytes) { break }
+        }
+        [PSCustomObject]@{ Bytes = $ms.ToArray(); Uri = $resp.ResponseUri }
+    }
+    finally { $resp.Close() }
+}
+
+# Nur Formate, die WPF ohne Zusatz-Codec darstellen kann
+function Get-ImageExtension([byte[]]$b) {
+    if ($null -eq $b -or $b.Length -lt 8) { return $null }
+    if ($b[0] -eq 0x89 -and $b[1] -eq 0x50 -and $b[2] -eq 0x4E -and $b[3] -eq 0x47) { return 'png' }
+    if ($b[0] -eq 0x00 -and $b[1] -eq 0x00 -and $b[2] -eq 0x01 -and $b[3] -eq 0x00) { return 'ico' }
+    if ($b[0] -eq 0xFF -and $b[1] -eq 0xD8) { return 'jpg' }
+    if ($b[0] -eq 0x47 -and $b[1] -eq 0x49 -and $b[2] -eq 0x46) { return 'gif' }
+    if ($b[0] -eq 0x42 -and $b[1] -eq 0x4D) { return 'bmp' }
+    return $null
+}
+
+# Homepage aus "winget show" (Beschriftungen sind je nach Sprache verschieden)
+function Get-PackageHomepage([string]$Id) {
+    $r = Invoke-Winget -Arguments @('show', '--id', $Id, '--exact', '--source', 'winget', '--accept-source-agreements')
+    if ($r.ExitCode -ne 0) { return $null }
+    $urls = @(foreach ($l in $r.Lines) {
+        if ($l -match '^\s*([^:]+?)\s*:\s*(https?://\S+)') { [PSCustomObject]@{ Label = $Matches[1].Trim(); Url = $Matches[2] } }
+    })
+    $pick = $urls | Where-Object { $_.Label -match '^(Homepage|Home page|Startseite)$' } | Select-Object -First 1
+    if (-not $pick) { $pick = $urls | Where-Object { $_.Label -match '^(Publisher Url|Herausgeber-URL)$' } | Select-Object -First 1 }
+    if (-not $pick) {
+        $pick = $urls | Where-Object { $_.Label -notmatch 'Install|Lizenz|License|Support|Privacy|Datenschutz|Release|Version|Kauf|Purchase|Doku|Documentation' } |
+                Select-Object -First 1
+    }
+    if ($pick) { return $pick.Url }
+    return $null
+}
+
+function Get-IconCandidates([string]$Homepage) {
+    $uri = [Uri]$Homepage
+    # Projekte auf GitHub: Avatar des Besitzers statt GitHub-Logo
+    if ($uri.Host -eq 'github.com' -and $uri.Segments.Count -ge 2) {
+        return @("https://github.com/$($uri.Segments[1].Trim('/')).png?size=128")
+    }
+    $origin = $uri.GetLeftPart([UriPartial]::Authority)
+    $good = @(); $small = @()
+    try {
+        $page = Get-WebBytes -Url $Homepage -MaxBytes 768KB
+        $html = [System.Text.Encoding]::UTF8.GetString($page.Bytes)
+        $links = foreach ($m in [regex]::Matches($html, '<link\b[^>]*>', 'IgnoreCase')) {
+            $tag = $m.Value
+            if ($tag -notmatch '\brel\s*=\s*["'']?([^"''>]+)') { continue }
+            $rel = $Matches[1].ToLowerInvariant()
+            if ($rel -notmatch 'icon') { continue }
+            if ($tag -notmatch '\bhref\s*=\s*["'']?([^"''\s>]+)') { continue }
+            $href = [System.Net.WebUtility]::HtmlDecode($Matches[1])
+            if ($href -match '\.svg($|\?)' -or $href -like 'data:*') { continue }
+            $size = if ($tag -match '\bsizes\s*=\s*["'']?(\d+)x') { [int]$Matches[1] } elseif ($rel -match 'apple-touch') { 180 } else { 16 }
+            [PSCustomObject]@{ Url = ([Uri]::new($page.Uri, $href)).AbsoluteUri; Size = $size }
+        }
+        $sorted = @($links | Sort-Object Size -Descending)
+        $good  = @($sorted | Where-Object { $_.Size -ge 48 } | ForEach-Object { $_.Url })
+        $small = @($sorted | Where-Object { $_.Size -lt 48 } | ForEach-Object { $_.Url })
+        $origin = $page.Uri.GetLeftPart([UriPartial]::Authority)   # nach Weiterleitung
+    }
+    catch { }
+    @($good + "$origin/apple-touch-icon.png" + $small + "$origin/favicon.ico") | Select-Object -Unique
+}
+
+function Save-PackageIcon([string]$Id) {
+    $homepage = Get-PackageHomepage $Id
+    if (-not $homepage) { return $null }
+    foreach ($url in @(Get-IconCandidates $homepage)) {
+        try {
+            $img = Get-WebBytes -Url $url
+            $ext = Get-ImageExtension $img.Bytes
+            if (-not $ext) { continue }
+            $file = Join-Path $IconDir "$Id.$ext"
+            [System.IO.File]::WriteAllBytes($file, $img.Bytes)
+            return $file
+        }
+        catch { }
+    }
+    return $null
+}
+
+$processed = @{}
+while (-not $sync.Shutdown) {
+    $id = $null
+    if (-not $sync.IconRequests.TryPop([ref]$id)) { Start-Sleep -Milliseconds 250; continue }
+    if ($processed.ContainsKey($id)) { continue }
+    $processed[$id] = $true
+    try {
+        $file = Save-PackageIcon $id
+        if ($file) { Send-Msg @{ Type = 'icon'; Id = $id; Path = $file } }
+        else { Set-Content -LiteralPath (Join-Path $IconDir "$id.none") -Value (Get-Date -Format o) }
+    }
+    catch { }
+}
 '@
 
 # ==================================================
@@ -741,23 +898,36 @@ $xaml = @'
       <CheckBox Style="{StaticResource CardCheck}" IsChecked="{Binding IsChecked, Mode=TwoWay}" Margin="0,0,0,4">
         <Grid>
           <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="Auto"/>
             <ColumnDefinition Width="*"/>
             <ColumnDefinition Width="Auto"/>
             <ColumnDefinition Width="Auto"/>
           </Grid.ColumnDefinitions>
-          <StackPanel VerticalAlignment="Center">
+          <Grid Width="32" Height="32" Margin="0,0,14,0" VerticalAlignment="Center">
+            <Border x:Name="Tile" CornerRadius="6" Background="{Binding TileColor}" Visibility="Collapsed">
+              <TextBlock Text="{Binding Initial}" Foreground="White" FontSize="15" FontWeight="SemiBold"
+                         HorizontalAlignment="Center" VerticalAlignment="Center"/>
+            </Border>
+            <Image Source="{Binding Icon}" Stretch="Uniform" StretchDirection="DownOnly" RenderOptions.BitmapScalingMode="HighQuality">
+              <Image.Clip><RectangleGeometry Rect="0,0,32,32" RadiusX="6" RadiusY="6"/></Image.Clip>
+            </Image>
+          </Grid>
+          <StackPanel Grid.Column="1" VerticalAlignment="Center">
             <TextBlock Text="{Binding Name}" TextTrimming="CharacterEllipsis"/>
             <TextBlock Text="{Binding Id}" FontSize="12" Foreground="{StaticResource TextSecondary}" TextTrimming="CharacterEllipsis" Margin="0,1,0,0"/>
           </StackPanel>
-          <TextBlock Grid.Column="1" Text="{Binding VersionText}" FontSize="12" Foreground="{StaticResource TextSecondary}"
+          <TextBlock Grid.Column="2" Text="{Binding VersionText}" FontSize="12" Foreground="{StaticResource TextSecondary}"
                      VerticalAlignment="Center" Margin="16,0,0,0"/>
-          <Border x:Name="Pill" Grid.Column="2" CornerRadius="10" Padding="10,2" Margin="12,0,0,0" VerticalAlignment="Center"
+          <Border x:Name="Pill" Grid.Column="3" CornerRadius="10" Padding="10,2" Margin="12,0,0,0" VerticalAlignment="Center"
                   Background="{StaticResource InfoBg}" Visibility="Collapsed">
             <TextBlock x:Name="PillText" Text="{Binding Status}" FontSize="12" Foreground="{StaticResource TextSecondary}"/>
           </Border>
         </Grid>
       </CheckBox>
       <DataTemplate.Triggers>
+        <DataTrigger Binding="{Binding Icon}" Value="{x:Null}">
+          <Setter TargetName="Tile" Property="Visibility" Value="Visible"/>
+        </DataTrigger>
         <DataTrigger Binding="{Binding StatusKind}" Value="wait">
           <Setter TargetName="Pill" Property="Visibility" Value="Visible"/>
         </DataTrigger>
@@ -993,11 +1163,15 @@ $window.Add_SourceInitialized({
 $script:uiReady     = $false
 $script:currentPage = $null
 $script:worker      = $null
+$script:iconWorker  = $null
 $script:infoAction  = $null
 $sync = [hashtable]::Synchronized(@{
-    Queue  = New-Object 'System.Collections.Concurrent.ConcurrentQueue[object]'
-    Cancel = $false
+    Queue        = New-Object 'System.Collections.Concurrent.ConcurrentQueue[object]'
+    IconRequests = New-Object 'System.Collections.Concurrent.ConcurrentStack[string]'
+    Cancel       = $false
+    Shutdown     = $false
 })
+$iconImages = @{}   # Paket-ID -> geladenes Bild (wird zwischen Seiten geteilt)
 
 function New-PackageItem {
     param([string]$Name, [string]$Id, [string]$Version = '', [string]$Available = '', [string]$Action = 'install')
@@ -1163,6 +1337,7 @@ function Show-Page([string]$Key) {
     $ui.SearchBar.Visibility = if ($p.Kind -eq 'search')  { 'Visible' } else { 'Collapsed' }
     $ui.UpdateBar.Visibility = if ($p.Kind -eq 'updates') { 'Visible' } else { 'Collapsed' }
     $ui.ListScroll.ScrollToTop()
+    Request-Icons $p.Items
     Update-Summary
     if ($p.Kind -eq 'search') { [void]$ui.SearchBox.Focus() }
 }
@@ -1225,6 +1400,7 @@ function Set-SearchResults($Data, [string]$Term) {
     $hits = @($Data).Count
     Add-LogLine "Suche »$Term«: $hits Treffer"
     $pages['Suche'].Empty = "Keine Treffer für »$Term«. Versuche einen anderen Begriff."
+    Request-Icons $col
     Update-Summary
 }
 
@@ -1241,6 +1417,7 @@ function Set-UpdateResults($Data) {
         Show-InfoBar -Kind success -Title 'Alles aktuell' -Text 'Für alle über winget verwalteten Programme ist die neueste Version installiert.'
     }
     Update-UpdateBadge
+    Request-Icons $col
     Update-Summary
 }
 
@@ -1252,6 +1429,14 @@ function Invoke-UiMessage($m) {
         'status'   { Set-ItemStatus -Id $m.Id -Kind $m.Kind -Text $m.Text }
         'search'   { Set-SearchResults -Data $m.Data -Term $m.Term }
         'updates'  { Set-UpdateResults -Data $m.Data }
+        'icon' {
+            $img = Import-IconImage $m.Path
+            if ($img) { Set-ItemIcon -Id $m.Id -Image $img }
+            else {
+                Remove-Item -LiteralPath $m.Path -ErrorAction SilentlyContinue
+                Set-Content -LiteralPath (Join-Path $iconDir "$($m.Id).none") -Value (Get-Date -Format o) -ErrorAction SilentlyContinue
+            }
+        }
         'result' {
             $prefix = if ($m.Ok) { '[OK]    ' } else { '[FEHLER]' }
             Add-LogLine "$prefix $($m.Name): $($m.Text)"
@@ -1274,6 +1459,71 @@ function Invoke-UiMessage($m) {
             Show-InfoBar -Kind error -Title 'Fehler' -Text $m.Text
         }
     }
+}
+
+# Bilddatei laden; bei .ico das größte enthaltene Format verwenden
+function Import-IconImage([string]$Path) {
+    try {
+        $bytes = [System.IO.File]::ReadAllBytes($Path)
+        $stream = New-Object System.IO.MemoryStream(, $bytes)
+        $decoder = [System.Windows.Media.Imaging.BitmapDecoder]::Create($stream,
+            [System.Windows.Media.Imaging.BitmapCreateOptions]::None,
+            [System.Windows.Media.Imaging.BitmapCacheOption]::OnLoad)
+        $frame = $decoder.Frames | Sort-Object { $_.PixelWidth } -Descending | Select-Object -First 1
+        if (-not $frame) { return $null }
+        $frame.Freeze()
+        return $frame
+    }
+    catch { return $null }
+}
+
+function Set-ItemIcon([string]$Id, $Image) {
+    $iconImages[$Id] = $Image
+    foreach ($it in @(Find-Items $Id)) { $it.Icon = $Image }
+}
+
+# Icon aus dem Speicher oder Datei-Cache setzen.
+# Rückgabe $true = erledigt (Icon gesetzt oder kürzlich erfolglos gesucht)
+function Set-IconFromCache($Item) {
+    $id = $Item.Id
+    if ($iconImages.ContainsKey($id)) { $Item.Icon = $iconImages[$id]; return $true }
+    foreach ($ext in 'png', 'ico', 'jpg', 'gif', 'bmp') {
+        $file = Join-Path $iconDir "$id.$ext"
+        if (Test-Path -LiteralPath $file) {
+            $img = Import-IconImage $file
+            if ($img) { Set-ItemIcon -Id $id -Image $img; return $true }
+            Remove-Item -LiteralPath $file -ErrorAction SilentlyContinue   # defekt -> neu laden
+        }
+    }
+    $none = Join-Path $iconDir "$id.none"
+    if ((Test-Path -LiteralPath $none) -and (Get-Item -LiteralPath $none).LastWriteTime -gt (Get-Date).AddDays(-3)) {
+        return $true
+    }
+    return $false
+}
+
+# Fehlende Icons anfragen; die erste Liste wird zuerst abgearbeitet
+function Request-Icons($Items) {
+    if (-not $EnableIcons) { return }
+    $list = @($Items | Where-Object { $null -eq $_.Icon })
+    for ($i = $list.Count - 1; $i -ge 0; $i--) {
+        if (-not (Set-IconFromCache $list[$i])) { $sync.IconRequests.Push($list[$i].Id) }
+    }
+}
+
+function Start-IconWorker {
+    if (-not $EnableIcons) { return }
+    try { New-Item -ItemType Directory -Path $iconDir -Force -ErrorAction Stop | Out-Null }
+    catch { Add-LogLine "Icon-Cache nicht verfügbar: $($_.Exception.Message)"; $script:EnableIcons = $false; return }
+    $rs = [runspacefactory]::CreateRunspace()
+    $rs.Open()
+    $rs.SessionStateProxy.SetVariable('sync', $sync)
+    $rs.SessionStateProxy.SetVariable('WingetPath', $wingetPath)
+    $rs.SessionStateProxy.SetVariable('IconDir', $iconDir)
+    $ps = [powershell]::Create()
+    $ps.Runspace = $rs
+    [void]$ps.AddScript($WorkerLib + "`r`n" + $IconJob)
+    $script:iconWorker = @{ PS = $ps; RS = $rs; Handle = $ps.BeginInvoke() }
 }
 
 function Receive-UiMessages {
@@ -1441,6 +1691,9 @@ $ui.EnvText.Text = $envParts -join ' · '
 $ui.StatusText.Text = 'Bereit'
 
 $script:uiReady = $true
+Start-IconWorker
+# Erst alle Katalog-Icons anfragen, danach die Startseite (Stapel -> sie kommt zuerst dran)
+Request-Icons @($catalogById.Values)
 $firstCategory = @($catalog.Keys)[0]
 if ($firstCategory) { $navButtons[$firstCategory].IsChecked = $true } else { $navButtons['Suche'].IsChecked = $true }
 Update-UpdateBadge
@@ -1448,10 +1701,10 @@ Update-UpdateBadge
 $timer.Start()
 [void]$window.ShowDialog()
 $timer.Stop()
+$sync.Shutdown = $true
 
-if ($script:worker) {
-    # Laufenden Hintergrundjob nicht abwarten
-    try { [void]$script:worker.PS.BeginStop($null, $null) } catch { }
-    [Environment]::Exit(0)
+# Laufende Hintergrundjobs (Installation, Icon-Downloads) nicht abwarten
+foreach ($w in @($script:worker, $script:iconWorker)) {
+    if ($w) { try { [void]$w.PS.BeginStop($null, $null) } catch { } }
 }
-exit 0
+[Environment]::Exit(0)
