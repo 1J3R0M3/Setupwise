@@ -88,13 +88,14 @@ public class WingetCliTests
         var fractions = new List<double?>();
         var log = new List<string>();
 
-        var result = await cli.RunAsync("Mozilla.Firefox", OperationKind.Install,
+        var result = await cli.RunAsync("Mozilla.Firefox", OperationKind.Install, InstallOptions.Default,
             new SyncProgress(p => fractions.Add(p.Fraction)), log.Add, TestContext.Current.CancellationToken);
 
         Assert.Equal(OperationOutcome.AlreadyInstalled, result.Outcome);
         Assert.True(result.IsSuccess);
         Assert.Equal([0.5], fractions);
-        Assert.Equal(["Found Mozilla Firefox [Mozilla.Firefox]", "Package is already installed."], log);
+        Assert.Equal(["Found Mozilla Firefox [Mozilla.Firefox]", "Package is already installed."], log.Skip(1));
+        Assert.StartsWith("winget install --id Mozilla.Firefox", log[0], StringComparison.Ordinal);
         Assert.Equal(["install", "--id", "Mozilla.Firefox", "--exact"], runner.LastArguments!.Take(4));
         Assert.Contains("--silent", runner.LastArguments!);
     }
@@ -103,7 +104,7 @@ public class WingetCliTests
     public async Task Upgrade_uses_the_upgrade_verb()
     {
         var runner = new FakeRunner(0);
-        await new WingetCli("winget.exe", runner).RunAsync("Git.Git", OperationKind.Upgrade, cancellationToken: TestContext.Current.CancellationToken);
+        await new WingetCli("winget.exe", runner).RunAsync("Git.Git", OperationKind.Upgrade, InstallOptions.Default, cancellationToken: TestContext.Current.CancellationToken);
         Assert.Equal("upgrade", runner.LastArguments![0]);
     }
 

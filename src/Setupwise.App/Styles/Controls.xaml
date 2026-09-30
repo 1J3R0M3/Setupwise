@@ -3,7 +3,8 @@
                     xmlns:ui="http://schemas.lepo.co/wpfui/2022/xaml"
                     xmlns:conv="clr-namespace:Setupwise.App.Converters"
                     xmlns:models="clr-namespace:Setupwise.App.Models"
-                    xmlns:controls="clr-namespace:Setupwise.App.Views.Controls">
+                    xmlns:controls="clr-namespace:Setupwise.App.Views.Controls"
+                    xmlns:services="clr-namespace:Setupwise.App.Services">
 
   <conv:BoolToVisibilityConverter x:Key="BoolToVisibility" />
   <conv:BoolToVisibilityConverter x:Key="InverseBoolToVisibility" Invert="True" />
@@ -116,6 +117,8 @@
   <!-- ===== Package card: the whole card is one check box ===== -->
   <Style x:Key="PackageCard" TargetType="CheckBox">
     <Setter Property="FocusVisualStyle" Value="{x:Null}" />
+    <!-- Right-click: add to own category -->
+    <Setter Property="services:PackageContextMenu.IsEnabled" Value="True" />
     <Setter Property="HorizontalContentAlignment" Value="Stretch" />
     <Setter Property="Foreground" Value="{DynamicResource TextFillColorPrimaryBrush}" />
     <Setter Property="Template">

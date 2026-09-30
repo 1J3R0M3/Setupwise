@@ -43,8 +43,15 @@
         <ui:Button Content="{loc:Tr Updates_Refresh}" Icon="{ui:SymbolIcon ArrowClockwise24}" Command="{Binding RefreshCommand}"
                    Visibility="{Binding ShowRefresh, Converter={StaticResource BoolToVisibility}}" />
         <!-- Selection -->
+        <ui:Button Content="{loc:Tr Selection_SaveAsCategory}" Icon="{ui:SymbolIcon FolderAdd24}" Command="{Binding SaveAsCategoryCommand}"
+                   Margin="0,0,8,0" Visibility="{Binding ShowSaveAsCategory, Converter={StaticResource BoolToVisibility}}" />
         <ui:Button Content="{loc:Tr Selection_Clear}" Icon="{ui:SymbolIcon Delete24}" Command="{Binding ClearCommand}"
                    Visibility="{Binding ShowClear, Converter={StaticResource BoolToVisibility}}" />
+        <!-- Own category -->
+        <StackPanel Orientation="Horizontal" Visibility="{Binding ShowCategoryActions, Converter={StaticResource BoolToVisibility}}">
+          <ui:Button Content="{loc:Tr Custom_Rename}" Icon="{ui:SymbolIcon Rename24}" Command="{Binding RenameCommand}" />
+          <ui:Button Margin="8,0,0,0" Content="{loc:Tr Custom_Delete}" Icon="{ui:SymbolIcon Delete24}" Command="{Binding DeleteCommand}" />
+        </StackPanel>
         <!-- Busy -->
         <StackPanel Orientation="Horizontal" Margin="16,0,0,0" Visibility="{Binding IsBusy, Converter={StaticResource BoolToVisibility}}">
           <ui:ProgressRing Width="16" Height="16" IsIndeterminate="True" />

@@ -5,7 +5,7 @@ namespace Setupwise.Core.Winget;
 /// <summary><see cref="IPackageManager"/> implemented on top of winget.exe.</summary>
 public sealed class WingetCli : IPackageManager
 {
-    private const string Source = "winget";
+    private const string Source = WingetArguments.Source;
     private readonly string _wingetPath;
     private readonly IProcessRunner _runner;
 
@@ -14,6 +14,9 @@ public sealed class WingetCli : IPackageManager
         _wingetPath = wingetPath;
         _runner = runner;
     }
+
+    /// <summary>Full path of winget.exe.</summary>
+    public string ExecutablePath => _wingetPath;
 
     /// <summary>Finds winget.exe, also when the app runs under a different (admin) account.</summary>
     public static string? Locate()
@@ -60,11 +63,9 @@ public sealed class WingetCli : IPackageManager
         return WingetTableParser.Parse(lines, 3).Select(ToInstalled).ToList();
     }
 
-    public async Task<IReadOnlyList<InstalledPackage>> GetUpgradesAsync(CancellationToken cancellationToken = default)
+    public async Task<IReadOnlyList<InstalledPackage>> GetUpgradesAsync(InstallOptions options, CancellationToken cancellationToken = default)
     {
-        var (exitCode, lines) = await RunCollectAsync(
-            ["upgrade", "--source", Source, "--accept-source-agreements", "--disable-interactivity"],
-            null, cancellationToken).ConfigureAwait(false);
+        var (exitCode, lines) = await RunCollectAsync(WingetArguments.UpgradeList(options), null, cancellationToken).ConfigureAwait(false);
 
         if (exitCode == WingetExitCodes.NoApplicationsFound) return [];
         EnsureSuccess(exitCode, "upgrade");
@@ -76,16 +77,13 @@ public sealed class WingetCli : IPackageManager
     public async Task<OperationResult> RunAsync(
         string packageId,
         OperationKind kind,
+        InstallOptions options,
         IProgress<OperationProgress>? progress = null,
         Action<string>? log = null,
         CancellationToken cancellationToken = default)
     {
-        var verb = kind == OperationKind.Upgrade ? "upgrade" : "install";
-        string[] args =
-        [
-            verb, "--id", packageId, "--exact", "--source", Source, "--silent",
-            "--accept-source-agreements", "--accept-package-agreements", "--disable-interactivity",
-        ];
+        var args = WingetArguments.Operation(packageId, kind, options);
+        log?.Invoke("winget " + string.Join(' ', args));
 
         void OnLine(string line)
         {

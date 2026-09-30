@@ -50,6 +50,110 @@
         </DockPanel>
       </Border>
 
+      <!-- Installation (winget options) -->
+      <TextBlock Text="{loc:Tr Settings_Installation}" Style="{StaticResource SectionHeader}" />
+      <ui:CardControl Style="{StaticResource SettingRow}" Icon="{ui:SymbolIcon Options24}">
+        <ui:CardControl.Header>
+          <StackPanel>
+            <TextBlock Text="{loc:Tr Settings_Mode}" />
+            <TextBlock Text="{loc:Tr Settings_ModeDesc}" Style="{StaticResource Caption}" />
+          </StackPanel>
+        </ui:CardControl.Header>
+        <ComboBox Width="260" ItemsSource="{Binding ModeOptions}" SelectedItem="{Binding SelectedMode}" DisplayMemberPath="Label" />
+      </ui:CardControl>
+      <ui:CardControl Style="{StaticResource SettingRow}" Icon="{ui:SymbolIcon People24}">
+        <ui:CardControl.Header>
+          <StackPanel>
+            <TextBlock Text="{loc:Tr Settings_Scope}" />
+            <TextBlock Text="{loc:Tr Settings_ScopeDesc}" Style="{StaticResource Caption}" />
+          </StackPanel>
+        </ui:CardControl.Header>
+        <ComboBox Width="260" ItemsSource="{Binding ScopeOptions}" SelectedItem="{Binding SelectedScope}" DisplayMemberPath="Label" />
+      </ui:CardControl>
+      <ui:CardControl Style="{StaticResource SettingRow}" Icon="{ui:SymbolIcon DeveloperBoard24}">
+        <ui:CardControl.Header>
+          <StackPanel>
+            <TextBlock Text="{loc:Tr Settings_Architecture}" />
+            <TextBlock Text="{loc:Tr Settings_ArchitectureDesc}" Style="{StaticResource Caption}" />
+          </StackPanel>
+        </ui:CardControl.Header>
+        <ComboBox Width="260" ItemsSource="{Binding ArchitectureOptions}" SelectedItem="{Binding SelectedArchitecture}" DisplayMemberPath="Label" />
+      </ui:CardControl>
+      <ui:CardControl Style="{StaticResource SettingRow}" Icon="{ui:SymbolIcon Globe24}">
+        <ui:CardControl.Header>
+          <StackPanel>
+            <TextBlock Text="{loc:Tr Settings_Locale}" />
+            <TextBlock Text="{loc:Tr Settings_LocaleDesc}" Style="{StaticResource Caption}" />
+          </StackPanel>
+        </ui:CardControl.Header>
+        <ComboBox Width="260" ItemsSource="{Binding LocaleOptions}" SelectedItem="{Binding SelectedLocale}" DisplayMemberPath="Label" />
+      </ui:CardControl>
+      <ui:CardControl Style="{StaticResource SettingRow}" Icon="{ui:SymbolIcon ArrowRepeatAll24}">
+        <ui:CardControl.Header>
+          <StackPanel>
+            <TextBlock Text="{loc:Tr Settings_Force}" />
+            <TextBlock Text="{loc:Tr Settings_ForceDesc}" Style="{StaticResource Caption}" />
+          </StackPanel>
+        </ui:CardControl.Header>
+        <ui:ToggleSwitch IsChecked="{Binding Force}" />
+      </ui:CardControl>
+      <ui:CardControl Style="{StaticResource SettingRow}" Icon="{ui:SymbolIcon Cube24}">
+        <ui:CardControl.Header>
+          <StackPanel>
+            <TextBlock Text="{loc:Tr Settings_SkipDeps}" />
+            <TextBlock Text="{loc:Tr Settings_SkipDepsDesc}" Style="{StaticResource Caption}" />
+          </StackPanel>
+        </ui:CardControl.Header>
+        <ui:ToggleSwitch IsChecked="{Binding SkipDependencies}" />
+      </ui:CardControl>
+      <ui:CardControl Style="{StaticResource SettingRow}" Icon="{ui:SymbolIcon ArrowSync24}">
+        <ui:CardControl.Header>
+          <StackPanel>
+            <TextBlock Text="{loc:Tr Settings_IncludeUnknown}" />
+            <TextBlock Text="{loc:Tr Settings_IncludeUnknownDesc}" Style="{StaticResource Caption}" />
+          </StackPanel>
+        </ui:CardControl.Header>
+        <ui:ToggleSwitch IsChecked="{Binding IncludeUnknownUpdates}" />
+      </ui:CardControl>
+
+      <!-- Security checks: weakening them needs a clear warning -->
+      <TextBlock Text="{loc:Tr Settings_Security}" Style="{StaticResource SectionHeader}" />
+      <Border Style="{StaticResource Card}" Padding="16,12" Margin="0,0,0,4"
+              Background="{DynamicResource SystemFillColorCautionBackgroundBrush}">
+        <DockPanel>
+          <ui:SymbolIcon DockPanel.Dock="Left" Symbol="Warning24" Filled="True" FontSize="20" Margin="0,0,14,0" VerticalAlignment="Top"
+                         Foreground="{DynamicResource SystemFillColorCautionBrush}" />
+          <TextBlock Text="{loc:Tr Settings_SecurityWarning}" TextWrapping="Wrap" Foreground="{DynamicResource TextFillColorPrimaryBrush}" />
+        </DockPanel>
+      </Border>
+      <ui:CardControl Style="{StaticResource SettingRow}" Icon="{ui:SymbolIcon ShieldDismiss24}">
+        <ui:CardControl.Header>
+          <StackPanel>
+            <TextBlock Text="{loc:Tr Settings_IgnoreHash}" />
+            <TextBlock Text="{loc:Tr Settings_IgnoreHashDesc}" Style="{StaticResource Caption}" />
+          </StackPanel>
+        </ui:CardControl.Header>
+        <ui:ToggleSwitch IsChecked="{Binding IgnoreSecurityHash}" />
+      </ui:CardControl>
+      <ui:CardControl Style="{StaticResource SettingRow}" Icon="{ui:SymbolIcon ShieldError24}">
+        <ui:CardControl.Header>
+          <StackPanel>
+            <TextBlock Text="{loc:Tr Settings_IgnoreMalwareScan}" />
+            <TextBlock Text="{loc:Tr Settings_IgnoreMalwareScanDesc}" Style="{StaticResource Caption}" />
+          </StackPanel>
+        </ui:CardControl.Header>
+        <ui:ToggleSwitch IsChecked="{Binding IgnoreLocalArchiveMalwareScan}" />
+      </ui:CardControl>
+      <ui:CardControl Style="{StaticResource SettingRow}" Icon="{ui:SymbolIcon LockOpen24}">
+        <ui:CardControl.Header>
+          <StackPanel>
+            <TextBlock Text="{loc:Tr Settings_Unlock}" />
+            <TextBlock Text="{loc:Tr Settings_UnlockDesc}" Style="{StaticResource Caption}" />
+          </StackPanel>
+        </ui:CardControl.Header>
+        <ui:Button Content="{loc:Tr Settings_UnlockButton}" Icon="{ui:SymbolIcon Shield24}" Command="{Binding UnlockSecurityOverridesCommand}" />
+      </ui:CardControl>
+
       <!-- Privacy -->
       <TextBlock Text="{loc:Tr Settings_Privacy}" Style="{StaticResource SectionHeader}" />
       <ui:CardControl Style="{StaticResource SettingRow}" Icon="{ui:SymbolIcon Image24}">
@@ -101,7 +205,7 @@
       <Border Style="{StaticResource Card}" Padding="16">
         <DockPanel>
           <Image DockPanel.Dock="Left" Width="48" Height="48" Margin="0,0,16,0" VerticalAlignment="Top"
-                 Source="pack://application:,,,/Assets/setupwise-256.png" RenderOptions.BitmapScalingMode="HighQuality" />
+                 Source="pack://application:,,,/Setupwise;component/Assets/setupwise-256.png" RenderOptions.BitmapScalingMode="HighQuality" />
           <ui:Button DockPanel.Dock="Right" VerticalAlignment="Center" Content="{loc:Tr Settings_GitHub}"
                      Icon="{ui:SymbolIcon Open24}" Command="{Binding OpenGitHubCommand}" />
           <StackPanel>

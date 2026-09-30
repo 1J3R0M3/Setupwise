@@ -1,5 +1,7 @@
 using System.IO;
 using System.Text.Json;
+using System.Text.Json.Serialization;
+using Setupwise.Core.Packages;
 
 namespace Setupwise.App.Infrastructure;
 
@@ -13,7 +15,14 @@ public sealed class AppSettings
     public bool LoadIcons { get; set; } = true;
     public bool CheckForAppUpdates { get; set; } = true;
 
-    private static readonly JsonSerializerOptions Options = new() { WriteIndented = true };
+    /// <summary>winget options for install/upgrade (Settings → Installation).</summary>
+    public InstallOptions Install { get; set; } = InstallOptions.Default;
+
+    private static readonly JsonSerializerOptions Options = new()
+    {
+        WriteIndented = true,
+        Converters = { new JsonStringEnumConverter() },
+    };
 
     public static AppSettings Load()
     {

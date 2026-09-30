@@ -20,6 +20,8 @@ public enum OperationOutcome
     NoApplicableUpgrade,
     RebootRequired,
     NotFound,
+    HashMismatch,
+    DownloadFailed,
     Cancelled,
     Failed,
 }

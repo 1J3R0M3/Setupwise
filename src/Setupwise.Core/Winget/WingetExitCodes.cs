@@ -7,6 +7,8 @@ namespace Setupwise.Core.Winget;
 /// <remarks>See https://github.com/microsoft/winget-cli/blob/master/doc/windows/package-manager/winget/returnCodes.md</remarks>
 public static class WingetExitCodes
 {
+    public const int DownloadFailed = unchecked((int)0x8A150008);
+    public const int InstallerHashMismatch = unchecked((int)0x8A150011);
     public const int NoApplicationsFound = unchecked((int)0x8A150014);
     public const int UpdateNotApplicable = unchecked((int)0x8A15002B);
     public const int PackageAlreadyInstalled = unchecked((int)0x8A150061);
@@ -19,6 +21,8 @@ public static class WingetExitCodes
         PackageAlreadyInstalled => OperationOutcome.AlreadyInstalled,
         RebootRequiredToFinish => OperationOutcome.RebootRequired,
         NoApplicationsFound => OperationOutcome.NotFound,
+        InstallerHashMismatch => OperationOutcome.HashMismatch,
+        DownloadFailed => OperationOutcome.DownloadFailed,
         _ => OperationOutcome.Failed,
     };
 

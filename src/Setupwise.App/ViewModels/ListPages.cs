@@ -32,10 +32,11 @@ public sealed class SelectionViewModel : PackageListPageViewModel
 {
     private readonly PackageStore _store;
 
-    public SelectionViewModel(PackageStore store) : base(store, store.Selected)
+    public SelectionViewModel(PackageStore store, UserCategoriesService categories) : base(store, store.Selected)
     {
         _store = store;
         ClearCommand = new RelayCommand(_store.ClearSelection);
+        SaveAsCategoryCommand = new RelayCommand(() => categories.CreateInteractively(_store.Selected.ToList()));
     }
 
     public override string Title => Loc.T("Nav_Selection");
@@ -43,8 +44,10 @@ public sealed class SelectionViewModel : PackageListPageViewModel
     public override string? Subtitle => Loc.T("Selection_Subtitle");
     public override string EmptyText => Loc.T("Selection_Empty");
     public override bool ShowClear => true;
+    public override bool ShowSaveAsCategory => HasItems;
 
     public IRelayCommand ClearCommand { get; }
+    public IRelayCommand SaveAsCategoryCommand { get; }
 }
 
 public sealed partial class UpdatesViewModel : PackageListPageViewModel

@@ -17,15 +17,37 @@ namespace Setupwise.App.ViewModels;
 
 public sealed partial class NavItem : ObservableObject
 {
-    public NavItem(PageViewModel page) => Page = page;
+    private readonly string? _title;
+    private readonly SymbolRegular _symbol;
+
+    public NavItem(PageViewModel page)
+    {
+        Page = page;
+        // Keep the navigation in sync when a page is renamed (own categories).
+        page.PropertyChanged += (_, e) =>
+        {
+            if (e.PropertyName == nameof(PageViewModel.Title)) OnPropertyChanged(nameof(Title));
+        };
+    }
+
+    private NavItem(string? title, SymbolRegular symbol)
+    {
+        Page = null!;
+        _title = title;
+        _symbol = symbol;
+    }
 
     /// <summary>Creates a divider line in the navigation list.</summary>
-    public static NavItem Separator() => new(null!) { IsSeparator = true };
+    public static NavItem Separator() => new(null, SymbolRegular.Empty) { IsSeparator = true };
+
+    /// <summary>An entry that runs an action instead of showing a page.</summary>
+    public static NavItem ForAction(string title, SymbolRegular symbol, Action action) => new(title, symbol) { Action = action };
 
     public PageViewModel Page { get; }
     public bool IsSeparator { get; private init; }
-    public string Title => Page?.Title ?? string.Empty;
-    public SymbolRegular Symbol => Page?.Symbol ?? SymbolRegular.Empty;
+    public Action? Action { get; private init; }
+    public string Title => Page?.Title ?? _title ?? string.Empty;
+    public SymbolRegular Symbol => Page?.Symbol ?? _symbol;
 
     [ObservableProperty]
     [NotifyPropertyChangedFor(nameof(HasBadge))]
@@ -45,6 +67,8 @@ public sealed partial class MainViewModel : ObservableObject
     private readonly HttpClient _http;
     private readonly NavItem _selectionNav;
     private readonly NavItem _updatesNav;
+    private readonly NavItem _newCategoryNav;
+    private readonly UserCategoriesService _categories;
     private CancellationTokenSource? _queueCancellation;
 
     public MainViewModel(AppCatalog catalog, PackageStore store, IPackageManager? packages, IconLoader icons, AppSettings settings, HttpClient http)
@@ -62,11 +86,16 @@ public sealed partial class MainViewModel : ObservableObject
             item.Description = app.Description?.Get(Loc.Instance.Culture);
         }
 
+        _categories = new UserCategoriesService(store, AppPaths.CategoriesFile);
+        _categories.Load();
+        _categories.Added += (_, category) => AddCategoryNav(category, select: true);
+        _categories.Removed += (_, category) => RemoveCategoryNav(category);
+
         Home = new HomeViewModel(catalog, store, ShowInfo);
-        Selection = new SelectionViewModel(store);
+        Selection = new SelectionViewModel(store, _categories);
         Search = new SearchViewModel(packages, store, icons);
         Updates = new UpdatesViewModel(store, RefreshInstalledAsync);
-        Settings = new SettingsViewModel(settings, icons);
+        Settings = new SettingsViewModel(settings, icons, (packages as WingetCli)?.ExecutablePath, ShowInfo);
 
         _selectionNav = new NavItem(Selection);
         _updatesNav = new NavItem(Updates);
@@ -78,6 +107,10 @@ public sealed partial class MainViewModel : ObservableObject
         foreach (var category in catalog.Categories)
             NavItems.Add(new NavItem(new CategoryViewModel(category, store, catalog.AppsIn(category.Id).Select(a => store.GetOrCreate(a.Id, a.Name)))));
         NavItems.Add(NavItem.Separator());
+        _newCategoryNav = NavItem.ForAction(Loc.T("Nav_NewCategory"), SymbolRegular.FolderAdd24, () => _categories.CreateInteractively([]));
+        NavItems.Add(_newCategoryNav);
+        foreach (var category in _categories.Categories) AddCategoryNav(category, select: false);
+        NavItems.Add(NavItem.Separator());
         NavItems.Add(new NavItem(Settings));
 
         store.SelectionChanged += (_, _) => OnSelectionChanged();
@@ -86,6 +119,7 @@ public sealed partial class MainViewModel : ObservableObject
         OnSelectionChanged();
     }
 
+    public UserCategoriesService Categories => _categories;
     public HomeViewModel Home { get; }
     public SelectionViewModel Selection { get; }
     public SearchViewModel Search { get; }
@@ -102,14 +136,36 @@ public sealed partial class MainViewModel : ObservableObject
 
     partial void OnSelectedNavChanged(NavItem? oldValue, NavItem? newValue)
     {
-        if (newValue is null || newValue.IsSeparator)
+        if (newValue is null || newValue.IsSeparator || newValue.Action is not null)
         {
-            // Separators are not selectable; restore the previous page.
-            if (oldValue is not null && !oldValue.IsSeparator) SelectedNav = oldValue;
+            // Separators and actions are not pages; go back to the previous page.
+            if (oldValue is not null && !oldValue.IsSeparator && oldValue.Action is null) SelectedNav = oldValue;
+            // Run the action after the list has finished changing its selection.
+            if (newValue?.Action is { } action) Application.Current?.Dispatcher.BeginInvoke(action);
             return;
         }
         CurrentPage = newValue.Page;
         _icons.Request(newValue.Page.VisiblePackages);
+    }
+
+    // ---------- Own categories ----------
+
+    private void AddCategoryNav(CustomCategoryViewModel category, bool select)
+    {
+        // Own categories are listed right after the "New category" entry, in creation order.
+        var index = NavItems.IndexOf(_newCategoryNav) + 1;
+        while (index < NavItems.Count && NavItems[index].Page is CustomCategoryViewModel) index++;
+        var nav = new NavItem(category);
+        NavItems.Insert(index, nav);
+        if (select) SelectedNav = nav;
+    }
+
+    private void RemoveCategoryNav(CustomCategoryViewModel category)
+    {
+        var nav = NavItems.FirstOrDefault(n => n.Page == category);
+        if (nav is null) return;
+        if (SelectedNav == nav) SelectedNav = NavItems[0];
+        NavItems.Remove(nav);
     }
 
     // ---------- Selection summary & install queue ----------
@@ -164,6 +220,8 @@ public sealed partial class MainViewModel : ObservableObject
 
         int succeeded = 0, failed = 0;
         var reboot = false;
+        var hashMismatch = false;
+        var options = _settings.Install;
         var done = new List<PackageItem>();
         AppLog.Write($"Starting {queue.Count} operation(s)");
 
@@ -190,7 +248,8 @@ public sealed partial class MainViewModel : ObservableObject
                 OverallProgress = (index + (p.Fraction ?? 0)) / queue.Count;
             });
 
-            var result = await _packages.RunAsync(item.Id, kind, progress, line => AppLog.Write("    " + line), cancellation.Token);
+            var result = await _packages.RunAsync(item.Id, kind, options, progress, line => AppLog.Write("    " + line), cancellation.Token);
+            hashMismatch |= result.Outcome == OperationOutcome.HashMismatch;
 
             item.Progress = null;
             item.Status = result.IsSuccess ? PackageStatus.Succeeded : PackageStatus.Failed;
@@ -224,6 +283,11 @@ public sealed partial class MainViewModel : ObservableObject
             : failed > 0
                 ? InfoMessage.Warning(Loc.T("Result_Errors_Title"), Loc.F("Result_Errors", succeeded, failed))
                 : InfoMessage.Success(Loc.T("Result_Done_Title"), Loc.F("Result_Done", succeeded) + (reboot ? " " + Loc.T("Result_Reboot") : string.Empty));
+        if (hashMismatch)
+        {
+            Info = new InfoMessage(InfoKind.Warning, Loc.T("Result_HashTitle"), Loc.T("Result_HashText"),
+                Loc.T("Nav_Settings"), () => SelectedNav = NavItems.First(n => n.Page == Settings));
+        }
         AppLog.Write($"Finished: {succeeded} succeeded, {failed} failed, {skipped} skipped");
 
         _updatesNav.BadgeCount = _store.Updates.Count;
@@ -247,6 +311,8 @@ public sealed partial class MainViewModel : ObservableObject
         OperationOutcome.NoApplicableUpgrade => Loc.T("Status_UpToDate"),
         OperationOutcome.RebootRequired => Loc.T("Status_Reboot"),
         OperationOutcome.NotFound => Loc.T("Status_NotFound"),
+        OperationOutcome.HashMismatch => Loc.T("Status_HashMismatch"),
+        OperationOutcome.DownloadFailed => Loc.T("Status_DownloadFailed"),
         OperationOutcome.Cancelled => Loc.T("Status_Cancelled"),
         _ => Loc.F("Status_Failed", WingetExitCodes.ToHex(result.ExitCode)),
     };
@@ -286,7 +352,7 @@ public sealed partial class MainViewModel : ObservableObject
         try
         {
             var installed = await _packages.GetInstalledAsync();
-            var upgrades = await _packages.GetUpgradesAsync();
+            var upgrades = await _packages.GetUpgradesAsync(_settings.Install);
             _store.ApplyInstalled(installed, upgrades);
             _updatesNav.BadgeCount = _store.Updates.Count;
             AppLog.Write($"{installed.Count} installed apps, {upgrades.Count} updates available");

@@ -10,11 +10,12 @@ public interface IPackageManager
 
     Task<IReadOnlyList<InstalledPackage>> GetInstalledAsync(CancellationToken cancellationToken = default);
 
-    Task<IReadOnlyList<InstalledPackage>> GetUpgradesAsync(CancellationToken cancellationToken = default);
+    Task<IReadOnlyList<InstalledPackage>> GetUpgradesAsync(InstallOptions options, CancellationToken cancellationToken = default);
 
     Task<OperationResult> RunAsync(
         string packageId,
         OperationKind kind,
+        InstallOptions options,
         IProgress<OperationProgress>? progress = null,
         Action<string>? log = null,
         CancellationToken cancellationToken = default);
