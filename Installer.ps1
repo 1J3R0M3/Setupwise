@@ -131,7 +131,7 @@ function Resolve-WingetPath {
 $wingetPath = Resolve-WingetPath
 if (-not $wingetPath) {
     [void][System.Windows.MessageBox]::Show(
-        "winget wurde nicht gefunden.`n`nBitte den „App-Installer“ aus dem Microsoft Store installieren oder aktualisieren und das Programm danach erneut starten.",
+        "winget wurde nicht gefunden.`n`nBitte den »App-Installer« aus dem Microsoft Store installieren oder aktualisieren und das Programm danach erneut starten.",
         'Winget Installer',
         [System.Windows.MessageBoxButton]::OK,
         [System.Windows.MessageBoxImage]::Error)
@@ -1036,7 +1036,7 @@ $pages['Suche'] = New-Page -Title 'Suche' -Glyph 0xE721 -Kind 'search' `
 foreach ($cat in $catalog.Keys) {
     $glyph = if ($categoryGlyphs.ContainsKey($cat)) { $categoryGlyphs[$cat] } else { 0xE71D }
     $page = New-Page -Title $cat -Glyph $glyph -Kind 'catalog' `
-        -Subtitle "$($catalog[$cat].Count) Programme – anhaken und unten auf „Installieren / Aktualisieren“ klicken." `
+        -Subtitle "$($catalog[$cat].Count) Programme – anhaken und unten auf »Installieren / Aktualisieren« klicken." `
         -Empty 'In dieser Kategorie sind keine Programme eingetragen.'
     foreach ($appName in $catalog[$cat].Keys) {
         $id = $catalog[$cat][$appName]
@@ -1048,7 +1048,7 @@ foreach ($cat in $catalog.Keys) {
 
 $pages['Updates'] = New-Page -Title 'Updates' -Glyph 0xE895 -Kind 'updates' `
     -Subtitle 'Installierte Programme, für die eine neuere Version verfügbar ist.' `
-    -Empty 'Klicke auf „Nach Updates suchen“, um installierte Programme zu prüfen.'
+    -Empty 'Klicke auf »Nach Updates suchen«, um installierte Programme zu prüfen.'
 
 # ==================================================
 # 9) UI-Funktionen
@@ -1223,8 +1223,8 @@ function Set-SearchResults($Data, [string]$Term) {
         $col.Add($item)
     }
     $hits = @($Data).Count
-    Add-LogLine "Suche „$Term“: $hits Treffer"
-    $pages['Suche'].Empty = "Keine Treffer für „$Term“. Versuche einen anderen Begriff."
+    Add-LogLine "Suche »$Term«: $hits Treffer"
+    $pages['Suche'].Empty = "Keine Treffer für »$Term«. Versuche einen anderen Begriff."
     Update-Summary
 }
 
@@ -1293,7 +1293,7 @@ function Invoke-Search {
         return
     }
     Hide-InfoBar
-    Start-UiWorker -Kind 'search' -Code $SearchJob -Argument $term -BusyText "Suche nach „$term“ …"
+    Start-UiWorker -Kind 'search' -Code $SearchJob -Argument $term -BusyText "Suche nach »$term« …"
 }
 
 function Invoke-UpdateCheck {
