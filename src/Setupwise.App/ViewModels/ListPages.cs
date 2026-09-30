@@ -24,7 +24,6 @@ public sealed class CategoryViewModel : PackageListPageViewModel
 
     public override string Title => _category.Name.Get(Loc.Instance.Culture);
     public override SymbolRegular Symbol { get; }
-    public override string? Subtitle => Loc.F("Category_Subtitle", Items.Count);
     public override string EmptyText => Loc.T("Category_Empty");
 }
 
@@ -37,14 +36,14 @@ public sealed class SelectionViewModel : PackageListPageViewModel
         _store = store;
         ClearCommand = new RelayCommand(_store.ClearSelection);
         SaveAsCategoryCommand = new RelayCommand(() => categories.CreateInteractively(_store.Selected.ToList()));
+        Items.CollectionChanged += (_, _) => OnPropertyChanged(nameof(ShowSaveAsCategory));
     }
 
     public override string Title => Loc.T("Nav_Selection");
     public override SymbolRegular Symbol => SymbolRegular.TaskListSquareLtr24;
     public override string? Subtitle => Loc.T("Selection_Subtitle");
     public override string EmptyText => Loc.T("Selection_Empty");
-    public override bool ShowClear => true;
-    public override bool ShowSaveAsCategory => HasItems;
+    public bool ShowSaveAsCategory => HasItems;
 
     public IRelayCommand ClearCommand { get; }
     public IRelayCommand SaveAsCategoryCommand { get; }
@@ -64,7 +63,6 @@ public sealed partial class UpdatesViewModel : PackageListPageViewModel
     public override string Title => Loc.T("Nav_Updates");
     public override SymbolRegular Symbol => SymbolRegular.ArrowSync24;
     public override string? Subtitle => Loc.T("Updates_Subtitle");
-    public override bool ShowRefresh => true;
 
     public override string EmptyText => _store.InstalledStateKnown ? Loc.T("Updates_None") : Loc.T("Updates_NotChecked");
 
@@ -102,7 +100,6 @@ public sealed partial class SearchViewModel : PackageListPageViewModel
     public override SymbolRegular Symbol => SymbolRegular.Search24;
     public override string? Subtitle => Loc.T("Search_Subtitle");
     public override string EmptyText => _emptyText;
-    public override bool ShowSearchBox => true;
 
     [ObservableProperty]
     public partial string Query { get; set; } = string.Empty;

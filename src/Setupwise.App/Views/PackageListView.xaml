@@ -28,30 +28,46 @@
       </Grid.ColumnDefinitions>
 
       <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
-        <!-- Search -->
-        <StackPanel Orientation="Horizontal" Visibility="{Binding ShowSearchBox, Converter={StaticResource BoolToVisibility}}">
-          <ui:TextBox x:Name="SearchBox" Width="360" PlaceholderText="{loc:Tr Search_Placeholder}"
-                      Icon="{ui:SymbolIcon Search24}" ClearButtonEnabled="True"
-                      Text="{Binding Query, UpdateSourceTrigger=PropertyChanged, FallbackValue=''}">
-            <ui:TextBox.InputBindings>
-              <KeyBinding Key="Enter" Command="{Binding SearchCommand}" />
-            </ui:TextBox.InputBindings>
-          </ui:TextBox>
-          <ui:Button Margin="8,0,0,0" Appearance="Primary" Content="{loc:Tr Search_Button}" Command="{Binding SearchCommand}" />
-        </StackPanel>
-        <!-- Updates -->
-        <ui:Button Content="{loc:Tr Updates_Refresh}" Icon="{ui:SymbolIcon ArrowClockwise24}" Command="{Binding RefreshCommand}"
-                   Visibility="{Binding ShowRefresh, Converter={StaticResource BoolToVisibility}}" />
-        <!-- Selection -->
-        <ui:Button Content="{loc:Tr Selection_SaveAsCategory}" Icon="{ui:SymbolIcon FolderAdd24}" Command="{Binding SaveAsCategoryCommand}"
-                   Margin="0,0,8,0" Visibility="{Binding ShowSaveAsCategory, Converter={StaticResource BoolToVisibility}}" />
-        <ui:Button Content="{loc:Tr Selection_Clear}" Icon="{ui:SymbolIcon Delete24}" Command="{Binding ClearCommand}"
-                   Visibility="{Binding ShowClear, Converter={StaticResource BoolToVisibility}}" />
-        <!-- Own category -->
-        <StackPanel Orientation="Horizontal" Visibility="{Binding ShowCategoryActions, Converter={StaticResource BoolToVisibility}}">
-          <ui:Button Content="{loc:Tr Custom_Rename}" Icon="{ui:SymbolIcon Rename24}" Command="{Binding RenameCommand}" />
-          <ui:Button Margin="8,0,0,0" Content="{loc:Tr Custom_Delete}" Icon="{ui:SymbolIcon Delete24}" Command="{Binding DeleteCommand}" />
-        </StackPanel>
+        <!-- Buttons that only exist on some pages: one template per page type -->
+        <ContentControl Content="{Binding}" Focusable="False" IsTabStop="False">
+          <ContentControl.Resources>
+            <DataTemplate DataType="{x:Type vm:PackageListPageViewModel}" />
+            <DataTemplate DataType="{x:Type vm:CategoryViewModel}" />
+
+            <DataTemplate DataType="{x:Type vm:SearchViewModel}">
+              <StackPanel Orientation="Horizontal">
+                <ui:TextBox Width="360" PlaceholderText="{loc:Tr Search_Placeholder}" Loaded="OnSearchBoxLoaded"
+                            Icon="{ui:SymbolIcon Search24}" ClearButtonEnabled="True"
+                            Text="{Binding Query, UpdateSourceTrigger=PropertyChanged}">
+                  <ui:TextBox.InputBindings>
+                    <KeyBinding Key="Enter" Command="{Binding SearchCommand}" />
+                  </ui:TextBox.InputBindings>
+                </ui:TextBox>
+                <ui:Button Margin="8,0,0,0" Appearance="Primary" Content="{loc:Tr Search_Button}" Command="{Binding SearchCommand}" />
+              </StackPanel>
+            </DataTemplate>
+
+            <DataTemplate DataType="{x:Type vm:UpdatesViewModel}">
+              <ui:Button Content="{loc:Tr Updates_Refresh}" Icon="{ui:SymbolIcon ArrowClockwise24}" Command="{Binding RefreshCommand}" />
+            </DataTemplate>
+
+            <DataTemplate DataType="{x:Type vm:SelectionViewModel}">
+              <StackPanel Orientation="Horizontal">
+                <ui:Button Margin="0,0,8,0" Content="{loc:Tr Selection_SaveAsCategory}" Icon="{ui:SymbolIcon FolderAdd24}"
+                           Command="{Binding SaveAsCategoryCommand}"
+                           Visibility="{Binding ShowSaveAsCategory, Converter={StaticResource BoolToVisibility}}" />
+                <ui:Button Content="{loc:Tr Selection_Clear}" Icon="{ui:SymbolIcon Delete24}" Command="{Binding ClearCommand}" />
+              </StackPanel>
+            </DataTemplate>
+
+            <DataTemplate DataType="{x:Type vm:CustomCategoryViewModel}">
+              <StackPanel Orientation="Horizontal">
+                <ui:Button Content="{loc:Tr Custom_Rename}" Icon="{ui:SymbolIcon Rename24}" Command="{Binding RenameCommand}" />
+                <ui:Button Margin="8,0,0,0" Content="{loc:Tr Custom_Delete}" Icon="{ui:SymbolIcon Delete24}" Command="{Binding DeleteCommand}" />
+              </StackPanel>
+            </DataTemplate>
+          </ContentControl.Resources>
+        </ContentControl>
         <!-- Busy -->
         <StackPanel Orientation="Horizontal" Margin="16,0,0,0" Visibility="{Binding IsBusy, Converter={StaticResource BoolToVisibility}}">
           <ui:ProgressRing Width="16" Height="16" IsIndeterminate="True" />

@@ -40,11 +40,6 @@ public abstract partial class PackageListPageViewModel : PageViewModel
 
     public abstract string EmptyText { get; }
 
-    public virtual bool ShowSearchBox => false;
-    public virtual bool ShowRefresh => false;
-    public virtual bool ShowClear => false;
-    public virtual bool ShowCategoryActions => false;
-    public virtual bool ShowSaveAsCategory => false;
 
     [ObservableProperty]
     [NotifyPropertyChangedFor(nameof(ShowEmptyState))]
@@ -89,6 +84,5 @@ public abstract partial class PackageListPageViewModel : PageViewModel
         OnPropertyChanged(nameof(CountText));
         OnPropertyChanged(nameof(ShowEmptyState));
         OnPropertyChanged(nameof(AllSelected));
-        OnPropertyChanged(nameof(ShowSaveAsCategory));
     }
 }

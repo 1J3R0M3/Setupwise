@@ -17,16 +17,14 @@ public sealed partial class CustomCategoryViewModel : PackageListPageViewModel
     {
         Model = model;
         _service = service;
-        Items.CollectionChanged += (_, _) => OnPropertyChanged(nameof(Subtitle));
     }
 
     public UserCategory Model { get; }
 
     public override string Title => Model.Name;
     public override SymbolRegular Symbol => SymbolRegular.Folder24;
-    public override string? Subtitle => Loc.F("Category_Subtitle", Items.Count);
+    public override string? Subtitle => Loc.T("Custom_Subtitle");
     public override string EmptyText => Loc.T("Custom_Empty");
-    public override bool ShowCategoryActions => true;
 
     public bool Contains(PackageItem item) => Items.Contains(item);
 

@@ -29,7 +29,7 @@
   "Selection_Empty": "Nothing selected yet. Choose a profile on the start page or check apps in the categories.",
   "Selection_Clear": "Clear selection",
 
-  "Category_Subtitle": "{0} apps",
+  "Custom_Subtitle": "Your own category. Right-click any app to add it here.",
   "Category_Empty": "This category is empty.",
 
   "Search_Subtitle": "Find more apps in the winget catalog.",

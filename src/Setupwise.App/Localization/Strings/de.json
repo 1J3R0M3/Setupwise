@@ -26,7 +26,7 @@
   "Selection_Empty": "Noch nichts ausgewählt. Wähle auf der Startseite ein Profil oder hake Programme in den Kategorien an.",
   "Selection_Clear": "Auswahl leeren",
 
-  "Category_Subtitle": "{0} Programme",
+  "Custom_Subtitle": "Deine eigene Kategorie. Mit Rechtsklick auf ein Programm fügst du es hinzu.",
   "Category_Empty": "Diese Kategorie ist leer.",
 
   "Search_Subtitle": "Weitere Programme im winget-Katalog finden.",

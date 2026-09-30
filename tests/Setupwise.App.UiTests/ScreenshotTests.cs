@@ -22,8 +22,7 @@ namespace Setupwise.App.UiTests;
 
 /// <summary>
 /// Starts the real main window with fake data, opens every page and saves a PNG of it.
-/// Fails on any exception while building a page (e.g. broken XAML); binding errors are
-/// written to binding-errors.txt for review.
+/// Fails on any exception while building a page (e.g. broken XAML) and on any binding error.
 /// </summary>
 public class ScreenshotTests
 {
@@ -57,17 +56,28 @@ public class ScreenshotTests
         PresentationTraceSources.DataBindingSource.Listeners.Add(bindingErrors);
         PresentationTraceSources.DataBindingSource.Switch.Level = SourceLevels.Error;
 
-        var app = new App();
-        app.InitializeComponent();
+        // Not "new App()": WPF would run App.OnStartup (real settings, real winget, system
+        // language and theme) as soon as the dispatcher runs. Only the resources are needed.
+        var app = new Application { ShutdownMode = ShutdownMode.OnExplicitShutdown };
+        app.Resources.MergedDictionaries.Add(new Wpf.Ui.Markup.ThemesDictionary { Theme = ApplicationTheme.Light });
+        app.Resources.MergedDictionaries.Add(new Wpf.Ui.Markup.ControlsDictionary());
+        app.Resources.MergedDictionaries.Add(new ResourceDictionary
+        {
+            Source = new Uri("pack://application:,,,/Setupwise;component/Styles/Controls.xaml", UriKind.Absolute),
+        });
 
         RenderRun(app, "de", ApplicationTheme.Light);
         RenderRun(app, "en", ApplicationTheme.Dark);
 
-        File.WriteAllLines(Path.Combine(OutputDirectory, "binding-errors.txt"), bindingErrors.Messages.Distinct().Order());
+        var errors = bindingErrors.Messages.Distinct().Order().ToList();
+        File.WriteAllLines(Path.Combine(OutputDirectory, "binding-errors.txt"), errors);
+        if (errors.Count > 0)
+            throw new InvalidOperationException($"{errors.Count} binding error(s), see binding-errors.txt:\n{string.Join('\n', errors.Take(5))}");
     }
 
     private static void RenderRun(Application app, string language, ApplicationTheme theme)
     {
+        File.Delete(AppPaths.CategoriesFile); // every run starts without own categories
         Loc.Instance.Load(language);
         ApplicationThemeManager.Apply(theme, WindowBackdropType.None, false);
 
@@ -116,7 +126,6 @@ public class ScreenshotTests
         Save(window, $"{language}-{theme.ToString().ToLowerInvariant()}-zz-log-and-info", full: false);
 
         window.Close();
-        foreach (var category in vm.Categories.Categories.ToList()) vm.Categories.Categories.Remove(category);
     }
 
     /// <summary>Saves the window content, or with <paramref name="full"/> the whole scrollable page.</summary>
