@@ -74,13 +74,25 @@ Check the id exists (`Test-CatalogIds.ps1`); CI checks it too. Only well-known a
 
 ## Git and releases
 
-- Commit and push **directly to `main`**; no feature branches or PRs unless the maintainer asks for one.
+- **Branches:** `main` is always tested and releasable; it is protected and only accepts commits whose CI checks
+  passed (no direct, untested pushes – also not for admins). Work happens on short-lived branches:
+  - `feature/<topic>` (e.g. `feature/r11-elevation`, `fix/nav-scroll`) – one requirement or fix each.
+  - `release/X.Y.x` – only when a fix for an older release is needed while `main` moved on; created from the tag.
+  - No long-lived `develop` branch.
+- **Flow:** branch from `main` → push → open a PR (`gh pr create`; `ci.yml` runs on PRs, the Windows job attaches
+  the installer as artifact `Setupwise-ci-N`) → the maintainer tests that installer on Windows → after their OK
+  rebase onto `main` if needed, wait for green CI, then merge **locally** with `git merge --ff-only` and push `main`
+  (fast-forward keeps the tested commit SHAs, so the required checks are already there). Delete the branch afterwards.
+  Do not merge without the maintainer's OK, and say what still needs a test on Windows.
 - Commit identity in this repo: `1J3R0M3 <180740383+1J3R0M3@users.noreply.github.com>` (already set in the local
   git config). Never commit with a real name or private e-mail address. Do not merge PRs via the GitHub UI/API
   (that may use the account e-mail); apply Dependabot changes locally instead.
-- Release: bump `VersionPrefix` in `Directory.Build.props`, move `[Unreleased]` in `CHANGELOG.md` to the new
-  version, commit, `git tag -a vX.Y.Z -m "Setupwise X.Y.Z"`, push the tag. `release.yml` checks that tag and version
+- Release: on a branch `release-prep/X.Y.Z`, bump `VersionPrefix` in `Directory.Build.props` and move `[Unreleased]`
+  in `CHANGELOG.md` to the new version; merge it like any other branch, then on `main`
+  `git tag -a vX.Y.Z -m "Setupwise X.Y.Z"` and push the tag. Betas: tag `vX.Y.Z-beta.N` on `main` (no version bump).
+  After a release, move its items on the [roadmap board](https://github.com/users/1J3R0M3/projects/1) to *Done*. `release.yml` checks that tag and version
   match, runs all tests, builds installer + portable zip + `SHA256SUMS.txt` and creates the GitHub release.
+- Dependabot PRs: apply the change locally on a branch and merge it the same way.
 - After pushing UI changes, download the `screenshots-*` artifact of the CI run and look at the pages.
 
 ## Working with the maintainer

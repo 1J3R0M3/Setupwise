@@ -64,9 +64,12 @@ Release files (installer needs [Inno Setup](https://jrsoftware.org/isinfo.php) o
 - Logic goes into `Setupwise.Core` with tests; the app stays thin.
 - Code and comments in English; every UI text goes through `Loc` (no hard-coded strings in XAML).
 - Keep pull requests focused and describe what you tested.
+- `main` is protected: it only accepts commits whose CI checks passed. Work on a branch (`feature/<topic>`,
+  `fix/<topic>`) and open a pull request; the CI run attaches a test installer (`Setupwise-ci-N`).
 
 ## Releases (maintainers)
 
-1. Update `VersionPrefix` in `Directory.Build.props` and the `CHANGELOG.md`.
-2. Commit, then `git tag v<version> && git push origin v<version>`.
+1. On a branch, update `VersionPrefix` in `Directory.Build.props` and the `CHANGELOG.md`; merge it into `main`.
+2. `git tag -a v<version> -m "Setupwise <version>" && git push origin v<version>` (betas: `v<version>-beta.N`).
 3. The *Release* workflow builds, tests and publishes installer, portable zip and checksums.
+4. Fixes for an older release go to a `release/X.Y.x` branch created from its tag.
