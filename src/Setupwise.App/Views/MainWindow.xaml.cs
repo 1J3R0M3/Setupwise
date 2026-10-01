@@ -16,6 +16,12 @@ public partial class MainWindow : FluentWindow
                 LogList.ScrollIntoView(LogList.Items[^1]);
         };
 
+        // Keep the selected page visible in the navigation, e.g. a new own category at the bottom.
+        NavList.SelectionChanged += (_, _) =>
+        {
+            if (NavList.SelectedItem is { } selected) Dispatcher.BeginInvoke(() => NavList.ScrollIntoView(selected));
+        };
+
         // Opening the console puts the cursor into its input line.
         ConsoleBox.IsVisibleChanged += (_, e) =>
         {

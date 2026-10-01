@@ -50,7 +50,7 @@
       <DockPanel Grid.Column="0" Margin="8,0,8,12">
         <TextBlock DockPanel.Dock="Top" Margin="16,0,0,12" Text="{loc:Tr App_Tagline}" FontSize="12"
                    Foreground="{DynamicResource TextFillColorSecondaryBrush}" />
-        <ListBox ItemsSource="{Binding NavItems}" SelectedItem="{Binding SelectedNav}"
+        <ListBox x:Name="NavList" ItemsSource="{Binding NavItems}" SelectedItem="{Binding SelectedNav}"
                  ItemContainerStyle="{StaticResource NavItemStyle}"
                  Background="Transparent" BorderThickness="0" Padding="0"
                  ScrollViewer.HorizontalScrollBarVisibility="Disabled" />
