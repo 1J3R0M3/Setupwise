@@ -81,6 +81,38 @@ public sealed partial class UpdatesViewModel : PackageListPageViewModel
     }
 }
 
+public sealed partial class InstalledViewModel : PackageListPageViewModel
+{
+    private readonly PackageStore _store;
+    private readonly Func<Task> _refresh;
+
+    public InstalledViewModel(PackageStore store, Func<Task> refresh) : base(store, store.Installed)
+    {
+        _store = store;
+        _refresh = refresh;
+    }
+
+    public override string Title => Loc.T("Nav_Installed");
+    public override SymbolRegular Symbol => SymbolRegular.AppsList24;
+    public override string? Subtitle => Loc.T("Installed_Subtitle");
+
+    public override string EmptyText => _store.InstalledStateKnown ? Loc.T("Installed_None") : Loc.T("Updates_NotChecked");
+
+    [RelayCommand(AllowConcurrentExecutions = false)]
+    private async Task RefreshAsync()
+    {
+        await _refresh();
+        RaiseEmptyTextChanged();
+    }
+
+    public void SetChecking(bool checking)
+    {
+        IsBusy = checking;
+        BusyText = checking ? Loc.T("Updates_Checking") : null;
+        RaiseEmptyTextChanged();
+    }
+}
+
 public sealed partial class SearchViewModel : PackageListPageViewModel
 {
     private readonly IPackageManager? _packages;

@@ -21,6 +21,11 @@ Setupwise ist eine freundliche Windows-App für alle, die PCs einrichten – den
 - **Kuratierter Katalog** – beliebte Programme in Kategorien, mit Beschreibungen auf Deutsch und Englisch.
 - **Suche** – findet jedes der tausenden Programme im winget-Katalog.
 - **Updates** – zeigt, welche installierten Programme veraltet sind, und aktualisiert sie in einem Rutsch.
+- **Installiert** – alles, was winget als installiert kennt, in einer Liste. Per Rechtsklick eine Version
+  überspringen oder ein Programm ganz von Updates ausschließen (winget pin).
+- **Rechtsklick zum Installieren** – ein einzelnes Programm sofort installieren oder aktualisieren, auch mit
+  einmaligen Optionen (Installer-Assistent, nur für mich, für alle Benutzer, neu installieren).
+- **Konsole** – eigene winget-Befehle ausführen; die Ausgabe erscheint im Protokoll.
 - **Einrichtung mitnehmen** – Auswahl als `.setupwise`-Datei speichern und auf dem nächsten PC öffnen.
 - **Windows-11-Look** – Mica, heller und dunkler Modus, echte Programm-Icons.
 - **Datenschutzfreundlich** – keine Telemetrie, kein Konto. Icons kommen von der Website des jeweiligen Herstellers (abschaltbar).

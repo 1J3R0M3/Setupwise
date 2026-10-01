@@ -18,6 +18,9 @@ public sealed class PackageStore
     /// <summary>Installed packages with an available update.</summary>
     public ObservableCollection<PackageItem> Updates { get; } = [];
 
+    /// <summary>All packages winget lists as installed from the winget source, sorted by name.</summary>
+    public ObservableCollection<PackageItem> Installed { get; } = [];
+
     public event EventHandler? SelectionChanged;
 
     /// <summary>Raised for every package that is newly created, e.g. to request its icon.</summary>
@@ -40,9 +43,13 @@ public sealed class PackageStore
         return item;
     }
 
-    /// <summary>Applies the result of "winget list" / "winget upgrade".</summary>
-    public void ApplyInstalled(IReadOnlyList<InstalledPackage> installed, IReadOnlyList<InstalledPackage> upgrades)
+    /// <summary>Applies the result of "winget list" / "winget upgrade" / "winget pin list".</summary>
+    /// <param name="upgrades">Updates to show; skipped versions must already be removed.</param>
+    public void ApplyInstalled(IReadOnlyList<InstalledPackage> installed, IReadOnlyList<InstalledPackage> upgrades, IReadOnlyCollection<string> pinned)
     {
+        ArgumentNullException.ThrowIfNull(installed);
+        ArgumentNullException.ThrowIfNull(pinned);
+        var pinnedIds = new HashSet<string>(pinned, StringComparer.OrdinalIgnoreCase);
         var upgradeById = upgrades.ToDictionary(u => u.Id, StringComparer.OrdinalIgnoreCase);
         var installedIds = new HashSet<string>(installed.Select(i => i.Id), StringComparer.OrdinalIgnoreCase);
         installedIds.UnionWith(upgradeById.Keys);
@@ -51,21 +58,20 @@ public sealed class PackageStore
         {
             item.IsInstalled = installedIds.Contains(item.Id);
             if (!item.IsInstalled) item.AvailableVersion = null;
+            item.IsPinned = item.IsInstalled && pinnedIds.Contains(item.Id);
         }
 
         foreach (var package in installed.Concat(upgrades))
         {
-            // Only create items for installed packages that we need to show (updates).
-            var item = upgradeById.ContainsKey(package.Id) ? GetOrCreate(package.Id, package.Name) : Find(package.Id);
-            if (item is null) continue;
+            var item = GetOrCreate(package.Id, package.Name);
             item.IsInstalled = true;
+            item.IsPinned = pinnedIds.Contains(package.Id);
             item.Version = package.Version;
             item.AvailableVersion = upgradeById.TryGetValue(package.Id, out var upgrade) ? upgrade.AvailableVersion : null;
         }
 
-        Updates.Clear();
-        foreach (var item in _items.Values.Where(i => i.HasUpdate).OrderBy(i => i.Name, StringComparer.CurrentCultureIgnoreCase))
-            Updates.Add(item);
+        Reset(Updates, _items.Values.Where(i => i.HasUpdate));
+        Reset(Installed, _items.Values.Where(i => i.IsInstalled));
 
         InstalledStateKnown = true;
     }
@@ -81,11 +87,31 @@ public sealed class PackageStore
             item.AvailableVersion = null;
         }
         Updates.Remove(item);
+        if (!Installed.Contains(item))
+        {
+            var index = 0;
+            while (index < Installed.Count && StringComparer.CurrentCultureIgnoreCase.Compare(Installed[index].Name, item.Name) < 0) index++;
+            Installed.Insert(index, item);
+        }
+    }
+
+    /// <summary>Hides the update of this item, e.g. after "Skip this version" or excluding the app from updates.</summary>
+    public void HideUpdate(PackageItem item)
+    {
+        ArgumentNullException.ThrowIfNull(item);
+        item.AvailableVersion = null;
+        Updates.Remove(item);
     }
 
     public void ClearSelection()
     {
         foreach (var item in Selected.ToList()) item.IsSelected = false;
+    }
+
+    private static void Reset(ObservableCollection<PackageItem> target, IEnumerable<PackageItem> items)
+    {
+        target.Clear();
+        foreach (var item in items.OrderBy(i => i.Name, StringComparer.CurrentCultureIgnoreCase)) target.Add(item);
     }
 
     private void OnItemPropertyChanged(object? sender, PropertyChangedEventArgs e)

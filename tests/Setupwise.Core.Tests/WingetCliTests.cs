@@ -108,6 +108,53 @@ public class WingetCliTests
         Assert.Equal("upgrade", runner.LastArguments![0]);
     }
 
+    [Fact]
+    public async Task Pin_list_returns_the_ids()
+    {
+        var cli = new WingetCli("winget.exe", new FakeRunner(0,
+            "Name      Id                  Version Source Pin type",
+            "------------------------------------------------------",
+            "PowerToys Microsoft.PowerToys 0.94.0  winget Blocking",
+            "7-Zip     7zip.7zip           25.01   winget Pinning"));
+
+        Assert.Equal(["Microsoft.PowerToys", "7zip.7zip"], await cli.GetPinnedAsync(TestContext.Current.CancellationToken));
+    }
+
+    [Fact]
+    public async Task Pin_list_without_pins_is_empty()
+    {
+        var cli = new WingetCli("winget.exe", new FakeRunner(0, "There are no pins configured."));
+        Assert.Empty(await cli.GetPinnedAsync(TestContext.Current.CancellationToken));
+    }
+
+    [Theory]
+    [InlineData(true, 0, OperationOutcome.Succeeded)]
+    [InlineData(true, unchecked((int)0x8A150062), OperationOutcome.Succeeded)] // pin already exists
+    [InlineData(false, unchecked((int)0x8A150063), OperationOutcome.Succeeded)] // there was no pin
+    [InlineData(false, unchecked((int)0x8A150062), OperationOutcome.Failed)]
+    [InlineData(true, unchecked((int)0x8A150064), OperationOutcome.Failed)] // pin database cannot be opened
+    public async Task Setting_a_pin_treats_the_goal_state_as_success(bool pinned, int exitCode, OperationOutcome expected)
+    {
+        var runner = new FakeRunner(exitCode);
+        var result = await new WingetCli("winget.exe", runner).SetPinnedAsync("Git.Git", pinned, cancellationToken: TestContext.Current.CancellationToken);
+
+        Assert.Equal(expected, result.Outcome);
+        Assert.Equal(pinned ? "add" : "remove", runner.LastArguments![1]);
+    }
+
+    [Fact]
+    public async Task Console_passes_arguments_unchanged_and_hides_spinner()
+    {
+        var runner = new FakeRunner(0, "-", "\\", "  ██████▒▒▒▒  1.00 MB / 2.00 MB", "Found Git [Git.Git]");
+        var output = new List<string>();
+
+        var exitCode = await new WingetCli("winget.exe", runner).RunCommandAsync(["search", "visual studio & del"], output.Add, TestContext.Current.CancellationToken);
+
+        Assert.Equal(0, exitCode);
+        Assert.Equal(["search", "visual studio & del"], runner.LastArguments);
+        Assert.Equal(["Found Git [Git.Git]"], output);
+    }
+
     private sealed class SyncProgress(Action<OperationProgress> report) : IProgress<OperationProgress>
     {
         public void Report(OperationProgress value) => report(value);

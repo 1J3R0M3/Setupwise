@@ -111,6 +111,39 @@ public sealed class WingetCli : IPackageManager
         return exitCode == 0 ? WingetShowParser.GetHomepage(lines) : null;
     }
 
+    public async Task<IReadOnlyList<string>> GetPinnedAsync(CancellationToken cancellationToken = default)
+    {
+        var (exitCode, lines) = await RunCollectAsync(WingetArguments.PinList(), null, cancellationToken).ConfigureAwait(false);
+        EnsureSuccess(exitCode, "pin list");
+        // Columns: Name, Id, Version, Source, Pin type, [Pinned version]. Only the id is needed.
+        return WingetTableParser.Parse(lines, 2).Select(c => c[1]).ToList();
+    }
+
+    public async Task<OperationResult> SetPinnedAsync(string packageId, bool pinned, Action<string>? log = null, CancellationToken cancellationToken = default)
+    {
+        var args = pinned ? WingetArguments.PinAdd(packageId) : WingetArguments.PinRemove(packageId);
+        log?.Invoke("winget " + string.Join(' ', args));
+        var (exitCode, lines) = await RunCollectAsync(args, null, cancellationToken).ConfigureAwait(false);
+        foreach (var line in lines) log?.Invoke(line.Trim());
+
+        // The goal is reached if the pin is already there or already gone.
+        var outcome = exitCode == 0 || exitCode == (pinned ? WingetExitCodes.PinAlreadyExists : WingetExitCodes.PinDoesNotExist)
+            ? OperationOutcome.Succeeded
+            : WingetExitCodes.Classify(exitCode);
+        return new OperationResult(outcome, exitCode);
+    }
+
+    public Task<int> RunCommandAsync(IReadOnlyList<string> arguments, Action<string> output, CancellationToken cancellationToken = default)
+    {
+        ArgumentNullException.ThrowIfNull(output);
+        return _runner.RunAsync(_wingetPath, arguments, raw =>
+        {
+            // Hide the frames of winget's spinner and progress bar; everything else is shown as it is.
+            var line = WingetOutput.Clean(raw);
+            if (!WingetOutput.IsNoise(line)) output(line);
+        }, cancellationToken);
+    }
+
     private static InstalledPackage ToInstalled(string[] c)
     {
         // Columns: Name, Id, Version, [Available], [Source]. "Available" only exists when an

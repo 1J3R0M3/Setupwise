@@ -25,7 +25,8 @@ public sealed class CatalogApp
 {
     /// <summary>The winget package identifier, e.g. "Mozilla.Firefox".</summary>
     public required string Id { get; init; }
-    public required string Name { get; init; }
+    /// <summary>Usually a plain string; translated where the name itself differs, e.g. "(German)".</summary>
+    public required LocalizedText Name { get; init; }
     public required string Category { get; init; }
     public LocalizedText? Description { get; init; }
 }

@@ -44,11 +44,11 @@ public static partial class CatalogLoader
         {
             var id = app.Id ?? string.Empty; // may be null when the JSON is malformed
             if (!WingetIdPattern().IsMatch(id))
-                errors.Add($"App '{app.Name}' has an invalid winget id '{id}'.");
+                errors.Add($"App '{app.Name?.Get(System.Globalization.CultureInfo.InvariantCulture)}' has an invalid winget id '{id}'.");
             else if (!appIds.Add(id))
                 errors.Add($"Duplicate app id '{app.Id}'.");
 
-            if (string.IsNullOrWhiteSpace(app.Name)) errors.Add($"App '{app.Id}' has no name.");
+            RequireEnglish(app.Name, $"app '{app.Id}' name", errors);
             if (!categoryIds.Contains(app.Category ?? string.Empty))
                 errors.Add($"App '{app.Id}' uses unknown category '{app.Category}'.");
             if (app.Description is not null) RequireEnglish(app.Description, $"app '{app.Id}' description", errors);

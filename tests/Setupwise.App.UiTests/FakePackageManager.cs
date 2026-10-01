@@ -35,4 +35,16 @@ internal sealed class FakePackageManager : IPackageManager
 
     public Task<Uri?> GetHomepageAsync(string packageId, CancellationToken cancellationToken = default) =>
         Task.FromResult<Uri?>(null);
+
+    public Task<IReadOnlyList<string>> GetPinnedAsync(CancellationToken cancellationToken = default) =>
+        Task.FromResult<IReadOnlyList<string>>(["7zip.7zip"]);
+
+    public Task<OperationResult> SetPinnedAsync(string packageId, bool pinned, Action<string>? log = null, CancellationToken cancellationToken = default) =>
+        Task.FromResult(new OperationResult(OperationOutcome.Succeeded, 0));
+
+    public Task<int> RunCommandAsync(IReadOnlyList<string> arguments, Action<string> output, CancellationToken cancellationToken = default)
+    {
+        output("Found Git [Git.Git]");
+        return Task.FromResult(0);
+    }
 }

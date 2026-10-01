@@ -38,6 +38,7 @@ If no .NET SDK is installed, install one into a temporary folder with
 | `tests/Setupwise.Core.Tests` | xUnit v3. Also checks the real catalog, all translations and XAML conventions |
 | `tests/Setupwise.App.UiTests` | Opens the real main window with `FakePackageManager`, saves screenshots of every page (de/light, en/dark) to `artifacts/screenshots`, fails on exceptions **and on any binding error** |
 | `catalog/catalog.json` | Curated apps, categories, profiles (embedded into the app) |
+| `docs/requirements.md` | Requirements and roadmap (requirements, not issues); keep the status column up to date |
 | `installer/Setupwise.iss` | Inno Setup script (UTF-8 **with BOM**, CRLF; shows `privacy.*.txt` before installing) |
 | `.github/workflows` | `ci.yml` (build/test on Linux, catalog id check, UI screenshots + installer on Windows), `release.yml` (tag `v*.*.*`) |
 

@@ -15,6 +15,16 @@ public sealed class AppSettings
     public bool LoadIcons { get; set; } = true;
     public bool CheckForAppUpdates { get; set; } = true;
 
+    /// <summary>The update check also offers alpha/beta versions.</summary>
+    public bool IncludePreReleases { get; set; }
+
+    /// <summary>Updates the user skipped: package id → skipped version (shown again once a newer one appears).</summary>
+    public Dictionary<string, string> SkippedUpdates
+    {
+        get;
+        set => field = new Dictionary<string, string>(value ?? [], StringComparer.OrdinalIgnoreCase); // JSON drops the comparer
+    } = new(StringComparer.OrdinalIgnoreCase);
+
     /// <summary>winget options for install/upgrade (Settings → Installation).</summary>
     public InstallOptions Install { get; set; } = InstallOptions.Default;
 

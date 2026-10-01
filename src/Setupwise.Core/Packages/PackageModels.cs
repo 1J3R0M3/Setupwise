@@ -22,6 +22,10 @@ public enum OperationOutcome
     NotFound,
     HashMismatch,
     DownloadFailed,
+    /// <summary>The app (or one of its files) is still in use; close it and try again.</summary>
+    AppInUse,
+    /// <summary>The app is excluded from updates with a winget pin.</summary>
+    Pinned,
     Cancelled,
     Failed,
 }

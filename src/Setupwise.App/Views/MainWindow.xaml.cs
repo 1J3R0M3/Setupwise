@@ -15,5 +15,11 @@ public partial class MainWindow : FluentWindow
             if (e.Action == NotifyCollectionChangedAction.Add && LogList.Items.Count > 0)
                 LogList.ScrollIntoView(LogList.Items[^1]);
         };
+
+        // Opening the console puts the cursor into its input line.
+        ConsoleBox.IsVisibleChanged += (_, e) =>
+        {
+            if (e.NewValue is true) Dispatcher.BeginInvoke(() => ConsoleBox.Focus());
+        };
     }
 }

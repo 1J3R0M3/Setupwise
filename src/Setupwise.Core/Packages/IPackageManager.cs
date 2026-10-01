@@ -21,4 +21,14 @@ public interface IPackageManager
         CancellationToken cancellationToken = default);
 
     Task<Uri?> GetHomepageAsync(string packageId, CancellationToken cancellationToken = default);
+
+    /// <summary>Ids of the apps that are excluded from updates (winget pins).</summary>
+    Task<IReadOnlyList<string>> GetPinnedAsync(CancellationToken cancellationToken = default);
+
+    /// <summary>Excludes the app from updates (<paramref name="pinned"/>) or allows updates again.</summary>
+    Task<OperationResult> SetPinnedAsync(string packageId, bool pinned, Action<string>? log = null, CancellationToken cancellationToken = default);
+
+    /// <summary>Runs a command the user typed in the console, e.g. ["show", "--id", "Git.Git"].</summary>
+    /// <returns>The exit code.</returns>
+    Task<int> RunCommandAsync(IReadOnlyList<string> arguments, Action<string> output, CancellationToken cancellationToken = default);
 }

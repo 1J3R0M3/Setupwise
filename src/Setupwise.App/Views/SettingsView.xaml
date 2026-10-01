@@ -115,6 +115,15 @@
         </ui:CardControl.Header>
         <ui:ToggleSwitch IsChecked="{Binding IncludeUnknownUpdates}" />
       </ui:CardControl>
+      <ui:CardControl Style="{StaticResource SettingRow}" Icon="{ui:SymbolIcon CalendarCancel24}">
+        <ui:CardControl.Header>
+          <StackPanel>
+            <TextBlock Text="{loc:Tr Settings_Skipped}" />
+            <TextBlock Text="{Binding SkippedUpdatesText}" Style="{StaticResource Caption}" />
+          </StackPanel>
+        </ui:CardControl.Header>
+        <ui:Button Content="{loc:Tr Settings_SkippedReset}" Command="{Binding ResetSkippedUpdatesCommand}" />
+      </ui:CardControl>
 
       <!-- Security checks: weakening them needs a clear warning -->
       <TextBlock Text="{loc:Tr Settings_Security}" Style="{StaticResource SectionHeader}" />
@@ -176,6 +185,15 @@
           </StackPanel>
         </ui:CardControl.Header>
         <ui:ToggleSwitch IsChecked="{Binding CheckForAppUpdates}" />
+      </ui:CardControl>
+      <ui:CardControl Style="{StaticResource SettingRow}" Icon="{ui:SymbolIcon Beaker24}">
+        <ui:CardControl.Header>
+          <StackPanel>
+            <TextBlock Text="{loc:Tr Settings_PreReleases}" />
+            <TextBlock Text="{loc:Tr Settings_PreReleasesDesc}" Style="{StaticResource Caption}" />
+          </StackPanel>
+        </ui:CardControl.Header>
+        <ui:ToggleSwitch IsChecked="{Binding IncludePreReleases}" IsEnabled="{Binding CheckForAppUpdates}" />
       </ui:CardControl>
 
       <!-- Advanced -->

@@ -1,4 +1,6 @@
 using System.IO;
+using System.Reflection;
+using Setupwise.Core.Updates;
 
 namespace Setupwise.App.Infrastructure;
 
@@ -26,8 +28,18 @@ public static class AppPaths
     public static string SettingsFile => Path.Combine(RoamingData, "settings.json");
     public static string CategoriesFile => Path.Combine(RoamingData, "categories.json");
 
-    public static Version AppVersion { get; } =
-        typeof(AppPaths).Assembly.GetName().Version ?? new Version(0, 0, 0);
+    /// <summary>Version of this build including a pre-release suffix such as "-beta.1".</summary>
+    public static AppVersion AppVersion { get; } = ReadVersion();
 
-    public static string AppVersionText => $"{AppVersion.Major}.{AppVersion.Minor}.{AppVersion.Build}";
+    public static string AppVersionText => AppVersion.ToString();
+
+    private static AppVersion ReadVersion()
+    {
+        // The informational version keeps the suffix ("0.3.0-beta.1+commit"); the assembly version does not.
+        var assembly = typeof(AppPaths).Assembly;
+        var informational = assembly.GetCustomAttribute<AssemblyInformationalVersionAttribute>()?.InformationalVersion;
+        if (AppVersion.TryParse(informational, out var version)) return version;
+        var plain = assembly.GetName().Version ?? new Version(0, 0, 0);
+        return new AppVersion(new Version(plain.Major, plain.Minor, Math.Max(plain.Build, 0)), null);
+    }
 }

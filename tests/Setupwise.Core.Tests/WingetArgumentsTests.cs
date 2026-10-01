@@ -84,4 +84,14 @@ public class WingetArgumentsTests
     [InlineData(unchecked((int)0x8A150008), OperationOutcome.DownloadFailed)]
     public void Classifies_download_and_hash_errors(int code, OperationOutcome expected) =>
         Assert.Equal(expected, WingetExitCodes.Classify(code));
+
+    [Fact]
+    public void Excluding_from_updates_uses_a_blocking_pin()
+    {
+        Assert.Equal(["pin", "add", "--id", "Git.Git", "--exact", "--source", "winget", "--blocking", "--force"],
+            WingetArguments.PinAdd("Git.Git").Take(9));
+        Assert.Equal(["pin", "remove", "--id", "Git.Git", "--exact", "--source", "winget"], WingetArguments.PinRemove("Git.Git").Take(7));
+        Assert.All([WingetArguments.PinAdd("x"), WingetArguments.PinRemove("x"), WingetArguments.PinList()],
+            args => Assert.Contains("--disable-interactivity", args));
+    }
 }

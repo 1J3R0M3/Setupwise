@@ -26,7 +26,12 @@ Setupwise is a friendly Windows app for everyone who sets up PCs – your own, y
 - **Profiles** – *Essentials*, *Home office*, *Gaming PC*, *Creator*, *Developer*: one click selects everything that belongs together.
 - **Curated catalog** – popular apps sorted into categories, with descriptions in English and German.
 - **Search** – find any of the thousands of apps in the winget catalog.
-- **Updates** – see which installed apps are outdated and update them in one go.
+- **Updates** – see which installed apps are outdated and update them in one go. Skip a version or exclude an app
+  from updates completely (winget pin) with a right-click.
+- **Installed apps** – everything winget knows as installed, in one list.
+- **Right-click to install** – install or update a single app right away, also with one-off options
+  (installer wizard, only for me, for all users, reinstall).
+- **Console** – run your own winget commands; the output appears in the log.
 - **Take your setup with you** – save your selection as a `.setupwise` file and open it on the next PC.
 - **Windows 11 look** – Mica, light and dark mode, real app icons.
 - **Privacy-friendly** – no telemetry, no account. Icons are loaded from each vendor's own website (can be turned off). See the [privacy policy](PRIVACY.md).

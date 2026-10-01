@@ -51,6 +51,10 @@
               <ui:Button Content="{loc:Tr Updates_Refresh}" Icon="{ui:SymbolIcon ArrowClockwise24}" Command="{Binding RefreshCommand}" />
             </DataTemplate>
 
+            <DataTemplate DataType="{x:Type vm:InstalledViewModel}">
+              <ui:Button Content="{loc:Tr Updates_Refresh}" Icon="{ui:SymbolIcon ArrowClockwise24}" Command="{Binding RefreshCommand}" />
+            </DataTemplate>
+
             <DataTemplate DataType="{x:Type vm:SelectionViewModel}">
               <StackPanel Orientation="Horizontal">
                 <ui:Button Margin="0,0,8,0" Content="{loc:Tr Selection_SaveAsCategory}" Icon="{ui:SymbolIcon FolderAdd24}"

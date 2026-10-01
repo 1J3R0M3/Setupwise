@@ -56,7 +56,7 @@ public sealed partial class NavItem : ObservableObject
     public bool HasBadge => BadgeCount > 0;
 }
 
-public sealed partial class MainViewModel : ObservableObject
+public sealed partial class MainViewModel : ObservableObject, IPackageActions
 {
     private const int MaxLogLines = 1000;
 
@@ -67,9 +67,13 @@ public sealed partial class MainViewModel : ObservableObject
     private readonly HttpClient _http;
     private readonly NavItem _selectionNav;
     private readonly NavItem _updatesNav;
+    private readonly NavItem _installedNav;
     private readonly NavItem _newCategoryNav;
     private readonly UserCategoriesService _categories;
     private CancellationTokenSource? _queueCancellation;
+    private CancellationTokenSource? _consoleCancellation;
+    private NavItem? _pageNav; // navigation entry of the page that is shown
+    private bool _navActionPending;
 
     public MainViewModel(AppCatalog catalog, PackageStore store, IPackageManager? packages, IconLoader icons, AppSettings settings, HttpClient http)
     {
@@ -82,7 +86,7 @@ public sealed partial class MainViewModel : ObservableObject
 
         foreach (var app in catalog.Apps)
         {
-            var item = store.GetOrCreate(app.Id, app.Name);
+            var item = store.GetOrCreate(app.Id, app.Name.Get(Loc.Instance.Culture));
             item.Description = app.Description?.Get(Loc.Instance.Culture);
         }
 
@@ -95,17 +99,20 @@ public sealed partial class MainViewModel : ObservableObject
         Selection = new SelectionViewModel(store, _categories);
         Search = new SearchViewModel(packages, store, icons);
         Updates = new UpdatesViewModel(store, RefreshInstalledAsync);
-        Settings = new SettingsViewModel(settings, icons, (packages as WingetCli)?.ExecutablePath, ShowInfo);
+        Installed = new InstalledViewModel(store, RefreshInstalledAsync);
+        Settings = new SettingsViewModel(settings, icons, (packages as WingetCli)?.ExecutablePath, ShowInfo, ResetSkippedUpdatesAsync);
 
         _selectionNav = new NavItem(Selection);
         _updatesNav = new NavItem(Updates);
+        _installedNav = new NavItem(Installed);
         NavItems.Add(new NavItem(Home));
         NavItems.Add(_selectionNav);
         NavItems.Add(new NavItem(Search));
         NavItems.Add(_updatesNav);
+        NavItems.Add(_installedNav);
         NavItems.Add(NavItem.Separator());
         foreach (var category in catalog.Categories)
-            NavItems.Add(new NavItem(new CategoryViewModel(category, store, catalog.AppsIn(category.Id).Select(a => store.GetOrCreate(a.Id, a.Name)))));
+            NavItems.Add(new NavItem(new CategoryViewModel(category, store, catalog.AppsIn(category.Id).Select(a => store.GetOrCreate(a.Id, a.Name.Get(Loc.Instance.Culture))))));
         NavItems.Add(NavItem.Separator());
         _newCategoryNav = NavItem.ForAction(Loc.T("Nav_NewCategory"), SymbolRegular.FolderAdd24, () => _categories.CreateInteractively([]));
         NavItems.Add(_newCategoryNav);
@@ -117,6 +124,7 @@ public sealed partial class MainViewModel : ObservableObject
         AppLog.LineWritten += OnLogLine;
         SelectedNav = NavItems[0];
         OnSelectionChanged();
+        PackageActions.Current = this;
     }
 
     public UserCategoriesService Categories => _categories;
@@ -124,6 +132,7 @@ public sealed partial class MainViewModel : ObservableObject
     public SelectionViewModel Selection { get; }
     public SearchViewModel Search { get; }
     public UpdatesViewModel Updates { get; }
+    public InstalledViewModel Installed { get; }
     public SettingsViewModel Settings { get; }
 
     public ObservableCollection<NavItem> NavItems { get; } = [];
@@ -134,18 +143,35 @@ public sealed partial class MainViewModel : ObservableObject
     [ObservableProperty]
     public partial PageViewModel? CurrentPage { get; set; }
 
-    partial void OnSelectedNavChanged(NavItem? oldValue, NavItem? newValue)
+    partial void OnSelectedNavChanged(NavItem? value)
     {
-        if (newValue is null || newValue.IsSeparator || newValue.Action is not null)
+        if (value is null || value.IsSeparator || value.Action is not null)
         {
-            // Separators and actions are not pages; go back to the previous page.
-            if (oldValue is not null && !oldValue.IsSeparator && oldValue.Action is null) SelectedNav = oldValue;
-            // Run the action after the list has finished changing its selection.
-            if (newValue?.Action is { } action) Application.Current?.Dispatcher.BeginInvoke(action);
+            // Separators and actions are not pages; go back to the page that was shown. Switching back
+            // right here, while the ListBox is still handling the click, made it re-apply its own
+            // selection – the action then ran twice ("New category" dialog opened again).
+            if (_navActionPending) return;
+            _navActionPending = true;
+            var action = value?.Action;
+            void Run()
+            {
+                try
+                {
+                    SelectedNav = _pageNav;
+                    action?.Invoke();
+                }
+                finally
+                {
+                    _navActionPending = false;
+                }
+            }
+            if (Application.Current?.Dispatcher is { } dispatcher) dispatcher.BeginInvoke(Run);
+            else Run();
             return;
         }
-        CurrentPage = newValue.Page;
-        _icons.Request(newValue.Page.VisiblePackages);
+        _pageNav = value;
+        CurrentPage = value.Page;
+        _icons.Request(value.Page.VisiblePackages);
     }
 
     // ---------- Own categories ----------
@@ -171,7 +197,7 @@ public sealed partial class MainViewModel : ObservableObject
     // ---------- Selection summary & install queue ----------
 
     [ObservableProperty]
-    [NotifyCanExecuteChangedFor(nameof(InstallCommand))]
+    [NotifyCanExecuteChangedFor(nameof(InstallCommand), nameof(RunConsoleCommand))]
     public partial bool IsRunning { get; set; }
 
     [ObservableProperty]
@@ -186,7 +212,11 @@ public sealed partial class MainViewModel : ObservableObject
     [ObservableProperty]
     public partial bool IsBusyIndicatorVisible { get; set; }
 
-    private bool CanInstall => !IsRunning && _packages is not null && _store.Selected.Count > 0;
+    private bool CanInstall => CanRun && _store.Selected.Count > 0;
+
+    public bool CanRun => !IsRunning && !IsConsoleRunning && _packages is not null;
+
+    public InstallOptions DefaultOptions => _settings.Install;
 
     private void OnSelectionChanged()
     {
@@ -202,10 +232,18 @@ public sealed partial class MainViewModel : ObservableObject
     }
 
     [RelayCommand(CanExecute = nameof(CanInstall))]
-    private async Task InstallAsync()
+    private Task InstallAsync() => RunQueueAsync(_store.Selected.ToList(), _settings.Install);
+
+    public async Task RunNowAsync(PackageItem item, InstallOptions options)
     {
-        if (_packages is null) return;
-        var queue = _store.Selected.ToList();
+        ArgumentNullException.ThrowIfNull(item);
+        if (!CanRun) return;
+        await RunQueueAsync([item], options);
+    }
+
+    private async Task RunQueueAsync(List<PackageItem> queue, InstallOptions options)
+    {
+        if (_packages is null || queue.Count == 0) return;
         using var cancellation = new CancellationTokenSource();
         _queueCancellation = cancellation;
         IsRunning = true;
@@ -223,7 +261,7 @@ public sealed partial class MainViewModel : ObservableObject
         int succeeded = 0, failed = 0;
         var reboot = false;
         var hashMismatch = false;
-        var options = _settings.Install;
+        var inUse = false;
         var done = new List<PackageItem>();
         AppLog.Write($"Starting {queue.Count} operation(s)");
 
@@ -252,6 +290,7 @@ public sealed partial class MainViewModel : ObservableObject
 
             var result = await _packages.RunAsync(item.Id, kind, options, progress, line => AppLog.Write("    " + line), cancellation.Token);
             hashMismatch |= result.Outcome == OperationOutcome.HashMismatch;
+            inUse |= result.Outcome == OperationOutcome.AppInUse;
 
             item.Progress = null;
             item.Status = result.IsSuccess ? PackageStatus.Succeeded : PackageStatus.Failed;
@@ -285,6 +324,7 @@ public sealed partial class MainViewModel : ObservableObject
             : failed > 0
                 ? InfoMessage.Warning(Loc.T("Result_Errors_Title"), Loc.F("Result_Errors", succeeded, failed))
                 : InfoMessage.Success(Loc.T("Result_Done_Title"), Loc.F("Result_Done", succeeded) + (reboot ? " " + Loc.T("Result_Reboot") : string.Empty));
+        if (inUse) Info = InfoMessage.Warning(Loc.T("Result_InUseTitle"), Loc.T("Result_InUseText"));
         if (hashMismatch)
         {
             Info = new InfoMessage(InfoKind.Warning, Loc.T("Result_HashTitle"), Loc.T("Result_HashText"),
@@ -315,6 +355,8 @@ public sealed partial class MainViewModel : ObservableObject
         OperationOutcome.NotFound => Loc.T("Status_NotFound"),
         OperationOutcome.HashMismatch => Loc.T("Status_HashMismatch"),
         OperationOutcome.DownloadFailed => Loc.T("Status_DownloadFailed"),
+        OperationOutcome.AppInUse => Loc.T("Status_InUse"),
+        OperationOutcome.Pinned => Loc.T("Status_Pinned"),
         OperationOutcome.Cancelled => Loc.T("Status_Cancelled"),
         _ => Loc.F("Status_Failed", WingetExitCodes.ToHex(result.ExitCode)),
     };
@@ -349,15 +391,18 @@ public sealed partial class MainViewModel : ObservableObject
     {
         if (_packages is null) return;
         Updates.SetChecking(true);
+        Installed.SetChecking(true);
         IsBusyIndicatorVisible = true;
         if (!IsRunning) StatusText = Loc.T("Bar_LoadingInstalled");
         try
         {
             var installed = await _packages.GetInstalledAsync();
             var upgrades = await _packages.GetUpgradesAsync(_settings.Install);
-            _store.ApplyInstalled(installed, upgrades);
+            var pinned = await GetPinnedAsync();
+            var shown = SkippedUpdates.Remove(upgrades, _settings.SkippedUpdates);
+            _store.ApplyInstalled(installed, shown, pinned);
             _updatesNav.BadgeCount = _store.Updates.Count;
-            AppLog.Write($"{installed.Count} installed apps, {upgrades.Count} updates available");
+            AppLog.Write($"{installed.Count} installed apps, {upgrades.Count} updates available ({upgrades.Count - shown.Count} skipped), {pinned.Count} excluded from updates");
             _icons.Request(_store.Updates);
             OnSelectionChanged();
         }
@@ -369,19 +414,163 @@ public sealed partial class MainViewModel : ObservableObject
         finally
         {
             Updates.SetChecking(false);
+            Installed.SetChecking(false);
             IsBusyIndicatorVisible = false;
             if (!IsRunning) StatusText = Loc.T("Bar_Ready");
+        }
+    }
+
+    private async Task<IReadOnlyList<string>> GetPinnedAsync()
+    {
+        if (_packages is null) return [];
+        try
+        {
+            return await _packages.GetPinnedAsync();
+        }
+        catch (Exception ex)
+        {
+            // Older winget versions have no "pin"; that must not break the update list.
+            AppLog.Write($"Reading pins failed: {ex.Message}");
+            return [];
         }
     }
 
     private async Task CheckForAppUpdateAsync()
     {
         if (!_settings.CheckForAppUpdates) return;
-        var release = await new AppUpdateChecker(_http, AppPaths.GitHubRepository).FindNewerAsync(AppPaths.AppVersion);
+        var release = await new AppUpdateChecker(_http, AppPaths.GitHubRepository).FindNewerAsync(AppPaths.AppVersion, _settings.IncludePreReleases);
         if (release is null || Info is not null) return;
-        ShowInfo(new InfoMessage(InfoKind.Info, Loc.T("AppUpdate_Title"), Loc.F("AppUpdate_Text", release.Version.ToString(3)),
+        var title = Loc.T(release.Version.IsPreRelease ? "AppUpdate_BetaTitle" : "AppUpdate_Title");
+        ShowInfo(new InfoMessage(InfoKind.Info, title, Loc.F("AppUpdate_Text", release.Version),
             Loc.T("AppUpdate_Download"), () => SystemActions.Open(release.PageUrl)));
     }
+
+    // ---------- Exclude from updates ----------
+
+    public async Task SetPinnedAsync(PackageItem item, bool pinned)
+    {
+        ArgumentNullException.ThrowIfNull(item);
+        if (_packages is null || !CanRun) return;
+
+        IsBusyIndicatorVisible = true;
+        AppLog.Write($"{(pinned ? "Excluding" : "Including")} {item.Name} ({item.Id}) {(pinned ? "from" : "in")} updates");
+        try
+        {
+            var result = await _packages.SetPinnedAsync(item.Id, pinned, line => AppLog.Write("    " + line));
+            if (!result.IsSuccess)
+            {
+                ShowInfo(InfoMessage.Warning(Loc.T("Error_Title"), Loc.F("Pin_Failed", item.Name, WingetExitCodes.ToHex(result.ExitCode))));
+                return;
+            }
+
+            item.IsPinned = pinned;
+            if (pinned)
+            {
+                if (item.HasUpdate) item.IsSelected = false;
+                _store.HideUpdate(item);
+                _updatesNav.BadgeCount = _store.Updates.Count;
+                ShowInfo(InfoMessage.Success(Loc.T("Pin_DoneTitle"), Loc.F("Pin_Done", item.Name)));
+            }
+            else
+            {
+                ShowInfo(InfoMessage.Success(Loc.T("Pin_RemovedTitle"), Loc.F("Pin_Removed", item.Name)));
+                await RefreshInstalledAsync(); // an update that was hidden by the pin shows up again
+            }
+        }
+        finally
+        {
+            IsBusyIndicatorVisible = false;
+            OnSelectionChanged();
+        }
+    }
+
+    public void SkipUpdate(PackageItem item)
+    {
+        ArgumentNullException.ThrowIfNull(item);
+        if (!item.HasUpdate || item.AvailableVersion is not { } version) return;
+
+        _settings.SkippedUpdates[item.Id] = version;
+        _settings.Save();
+        AppLog.Write($"Skipping version {version} of {item.Name} ({item.Id})");
+        item.IsSelected = false;
+        _store.HideUpdate(item);
+        _updatesNav.BadgeCount = _store.Updates.Count;
+        OnSelectionChanged();
+        Settings.RefreshSkippedUpdates();
+        ShowInfo(InfoMessage.Info(Loc.T("Skip_DoneTitle"), Loc.F("Skip_Done", item.Name, version)));
+    }
+
+    /// <summary>Shows all skipped updates again (Settings).</summary>
+    public async Task ResetSkippedUpdatesAsync()
+    {
+        _settings.SkippedUpdates.Clear();
+        _settings.Save();
+        await RefreshInstalledAsync();
+    }
+
+    // ---------- Console (own winget commands) ----------
+
+    [ObservableProperty]
+    public partial bool IsConsoleOpen { get; set; }
+
+    [ObservableProperty]
+    [NotifyCanExecuteChangedFor(nameof(RunConsoleCommand))]
+    public partial string ConsoleInput { get; set; } = string.Empty;
+
+    [ObservableProperty]
+    [NotifyCanExecuteChangedFor(nameof(InstallCommand), nameof(RunConsoleCommand), nameof(StopConsoleCommand))]
+    public partial bool IsConsoleRunning { get; set; }
+
+    [RelayCommand]
+    private void ToggleConsole()
+    {
+        IsConsoleOpen = !IsConsoleOpen;
+        if (IsConsoleOpen) IsLogOpen = true;
+    }
+
+    private bool CanRunConsole => CanRun && ConsoleCommand.Parse(ConsoleInput).Count > 0;
+
+    [RelayCommand(CanExecute = nameof(CanRunConsole))]
+    private async Task RunConsoleAsync()
+    {
+        if (_packages is null) return;
+        var args = ConsoleCommand.Parse(ConsoleInput);
+        if (args.Count == 0) return;
+
+        ConsoleInput = string.Empty;
+        using var cancellation = new CancellationTokenSource();
+        _consoleCancellation = cancellation;
+        IsConsoleRunning = true;
+        IsLogOpen = true;
+        AppLog.Write("> winget " + string.Join(' ', args.Select(a => a.Contains(' ', StringComparison.Ordinal) || a.Length == 0 ? $"\"{a}\"" : a)));
+        try
+        {
+            var exitCode = await _packages.RunCommandAsync(args, AppLog.Write, cancellation.Token);
+            AppLog.Write(Loc.F("Console_Finished", WingetExitCodes.ToHex(exitCode)));
+        }
+        catch (OperationCanceledException)
+        {
+            AppLog.Write(Loc.T("Console_Stopped"));
+        }
+        catch (Exception ex) when (ex is System.ComponentModel.Win32Exception or InvalidOperationException)
+        {
+            AppLog.Write(Loc.F("Winget_Failed", ex.Message));
+        }
+        finally
+        {
+            _consoleCancellation = null;
+            IsConsoleRunning = false;
+        }
+
+        // The command may have changed what is installed.
+        if (args[0].ToLowerInvariant() is "install" or "add" or "upgrade" or "update" or "uninstall" or "remove" or "rm" or "pin" or "import")
+            await RefreshInstalledAsync();
+    }
+
+    private bool CanStopConsole => IsConsoleRunning;
+
+    [RelayCommand(CanExecute = nameof(CanStopConsole))]
+    private void StopConsole() => _consoleCancellation?.Cancel();
 
     // ---------- Info bar ----------
 

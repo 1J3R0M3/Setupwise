@@ -120,6 +120,8 @@ public class ScreenshotTests
         }
 
         vm.IsLogOpen = true;
+        vm.IsConsoleOpen = true;
+        vm.ConsoleInput = "show --id Git.Git";
         vm.ShowInfo(InfoMessage.Success(Loc.T("Result_Done_Title"), Loc.F("Result_Done", 3)));
         vm.SelectedNav = vm.NavItems[1];
         Pump();

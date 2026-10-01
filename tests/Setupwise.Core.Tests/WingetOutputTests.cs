@@ -40,6 +40,10 @@ public class WingetOutputTests
     [InlineData(unchecked((int)0x8A150061), OperationOutcome.AlreadyInstalled)]
     [InlineData(unchecked((int)0x8A150109), OperationOutcome.RebootRequired)]
     [InlineData(unchecked((int)0x8A150014), OperationOutcome.NotFound)]
+    [InlineData(unchecked((int)0x8A150101), OperationOutcome.AppInUse)]
+    [InlineData(unchecked((int)0x8A150103), OperationOutcome.AppInUse)]
+    [InlineData(unchecked((int)0x8A150111), OperationOutcome.AppInUse)]
+    [InlineData(unchecked((int)0x8A150068), OperationOutcome.Pinned)]
     [InlineData(1603, OperationOutcome.Failed)]
     public void Classifies_exit_codes(int code, OperationOutcome expected) =>
         Assert.Equal(expected, WingetExitCodes.Classify(code));

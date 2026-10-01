@@ -18,14 +18,16 @@ public sealed partial class SettingsViewModel : PageViewModel
     private readonly IconLoader _icons;
     private readonly string? _wingetPath;
     private readonly Action<InfoMessage> _notify;
+    private readonly Func<Task> _resetSkippedUpdates;
     private bool _loading = true;
 
-    public SettingsViewModel(AppSettings settings, IconLoader icons, string? wingetPath, Action<InfoMessage> notify)
+    public SettingsViewModel(AppSettings settings, IconLoader icons, string? wingetPath, Action<InfoMessage> notify, Func<Task> resetSkippedUpdates)
     {
         _settings = settings;
         _icons = icons;
         _wingetPath = wingetPath;
         _notify = notify;
+        _resetSkippedUpdates = resetSkippedUpdates;
 
         ThemeOptions =
         [
@@ -39,6 +41,7 @@ public sealed partial class SettingsViewModel : PageViewModel
         SelectedLanguage = LanguageOptions.FirstOrDefault(o => o.Value == settings.Language) ?? LanguageOptions[0];
         LoadIcons = settings.LoadIcons;
         CheckForAppUpdates = settings.CheckForAppUpdates;
+        IncludePreReleases = settings.IncludePreReleases;
 
         ModeOptions =
         [
@@ -199,6 +202,38 @@ public sealed partial class SettingsViewModel : PageViewModel
     {
         _settings.CheckForAppUpdates = value;
         _settings.Save();
+    }
+
+    [ObservableProperty]
+    public partial bool IncludePreReleases { get; set; }
+
+    partial void OnIncludePreReleasesChanged(bool value)
+    {
+        if (_loading) return;
+        _settings.IncludePreReleases = value;
+        _settings.Save();
+    }
+
+    // ---------- Skipped updates ----------
+
+    public string SkippedUpdatesText => _settings.SkippedUpdates.Count == 0
+        ? Loc.T("Settings_SkippedNone")
+        : Loc.F("Settings_SkippedDesc", string.Join(", ", _settings.SkippedUpdates.Select(s => $"{s.Key} {s.Value}").Order(StringComparer.OrdinalIgnoreCase)));
+
+    private bool HasSkippedUpdates => _settings.SkippedUpdates.Count > 0;
+
+    /// <summary>Called when an update was skipped somewhere else.</summary>
+    public void RefreshSkippedUpdates()
+    {
+        OnPropertyChanged(nameof(SkippedUpdatesText));
+        ResetSkippedUpdatesCommand.NotifyCanExecuteChanged();
+    }
+
+    [RelayCommand(CanExecute = nameof(HasSkippedUpdates))]
+    private async Task ResetSkippedUpdatesAsync()
+    {
+        await _resetSkippedUpdates();
+        RefreshSkippedUpdates();
     }
 
     [RelayCommand]

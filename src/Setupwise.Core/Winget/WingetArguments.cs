@@ -65,6 +65,19 @@ public static class WingetArguments
         return args;
     }
 
+    /// <summary>
+    /// Excludes the app from updates. A blocking pin stops "winget upgrade" for this app altogether, also
+    /// for a single explicit upgrade (a plain pin only affects "upgrade --all"). "--force" replaces an
+    /// existing pin of another type instead of failing.
+    /// </summary>
+    public static IReadOnlyList<string> PinAdd(string packageId) =>
+        ["pin", "add", "--id", packageId, "--exact", "--source", Source, "--blocking", "--force", .. Agreements];
+
+    public static IReadOnlyList<string> PinRemove(string packageId) =>
+        ["pin", "remove", "--id", packageId, "--exact", "--source", Source, .. Agreements];
+
+    public static IReadOnlyList<string> PinList() => ["pin", "list", "--source", Source, .. Agreements];
+
     /// <summary>"winget settings --enable X" – must run elevated.</summary>
     public static IReadOnlyList<string> EnableAdminSetting(string setting) => ["settings", "--enable", setting];
 }

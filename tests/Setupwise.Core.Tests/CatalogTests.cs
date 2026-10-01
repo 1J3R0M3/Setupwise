@@ -30,6 +30,16 @@ public class CatalogTests
     }
 
     [Fact]
+    public void App_names_can_be_translated()
+    {
+        using var stream = File.OpenRead(Path.Combine(AppContext.BaseDirectory, "catalog.json"));
+        var firefox = CatalogLoader.Load(stream).Apps.Single(a => a.Id == "Mozilla.Firefox.de");
+
+        Assert.Equal("Mozilla Firefox (Deutsch)", firefox.Name.Get(CultureInfo.GetCultureInfo("de-DE")));
+        Assert.Equal("Mozilla Firefox (German)", firefox.Name.Get(CultureInfo.GetCultureInfo("en-US")));
+    }
+
+    [Fact]
     public void Validation_reports_broken_references()
     {
         var catalog = CatalogLoader.Load("""

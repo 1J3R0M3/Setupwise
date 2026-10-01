@@ -12,7 +12,13 @@ public static class WingetExitCodes
     public const int NoApplicationsFound = unchecked((int)0x8A150014);
     public const int UpdateNotApplicable = unchecked((int)0x8A15002B);
     public const int PackageAlreadyInstalled = unchecked((int)0x8A150061);
+    public const int PinAlreadyExists = unchecked((int)0x8A150062);
+    public const int PinDoesNotExist = unchecked((int)0x8A150063);
+    public const int PackageIsPinned = unchecked((int)0x8A150068);
+    public const int PackageInUse = unchecked((int)0x8A150101);
+    public const int FileInUse = unchecked((int)0x8A150103);
     public const int RebootRequiredToFinish = unchecked((int)0x8A150109);
+    public const int PackageInUseByApplication = unchecked((int)0x8A150111);
 
     public static OperationOutcome Classify(int exitCode) => exitCode switch
     {
@@ -23,6 +29,8 @@ public static class WingetExitCodes
         NoApplicationsFound => OperationOutcome.NotFound,
         InstallerHashMismatch => OperationOutcome.HashMismatch,
         DownloadFailed => OperationOutcome.DownloadFailed,
+        PackageInUse or FileInUse or PackageInUseByApplication => OperationOutcome.AppInUse,
+        PackageIsPinned => OperationOutcome.Pinned,
         _ => OperationOutcome.Failed,
     };
 

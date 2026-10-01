@@ -82,7 +82,9 @@
                              Visibility="{Binding IsRunning, Converter={StaticResource BoolToVisibility}}" />
               </StackPanel>
               <StackPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Center">
-                <ui:Button Content="{loc:Tr Bar_Log}" Icon="{ui:SymbolIcon DocumentBulletList24}" Command="{Binding ToggleLogCommand}" />
+                <ui:Button Content="{loc:Tr Bar_Console}" Icon="{ui:SymbolIcon WindowConsole20}" Command="{Binding ToggleConsoleCommand}"
+                           ToolTip="{loc:Tr Console_Tooltip}" />
+                <ui:Button Margin="8,0,0,0" Content="{loc:Tr Bar_Log}" Icon="{ui:SymbolIcon DocumentBulletList24}" Command="{Binding ToggleLogCommand}" />
                 <ui:Button Margin="8,0,0,0" Content="{loc:Tr Bar_Cancel}" Icon="{ui:SymbolIcon Stop24}" Command="{Binding CancelCommand}"
                            Visibility="{Binding IsRunning, Converter={StaticResource BoolToVisibility}}" />
                 <ui:Button Margin="8,0,0,0" Appearance="Primary" MinWidth="140" Content="{loc:Tr Bar_Install}"
@@ -92,9 +94,26 @@
           </Border>
 
           <!-- Log -->
-          <Border DockPanel.Dock="Bottom" Height="200" Margin="32,0,32,12" Style="{StaticResource Card}" Padding="0"
+          <Border DockPanel.Dock="Bottom" Height="240" Margin="32,0,32,12" Style="{StaticResource Card}" Padding="0"
                   Visibility="{Binding IsLogOpen, Converter={StaticResource BoolToVisibility}}">
             <DockPanel>
+              <!-- Console: own winget commands -->
+              <DockPanel DockPanel.Dock="Bottom" Margin="8,0,8,8"
+                         Visibility="{Binding IsConsoleOpen, Converter={StaticResource BoolToVisibility}}">
+                <ui:Button DockPanel.Dock="Right" Margin="8,0,0,0" Content="{loc:Tr Console_Stop}" Icon="{ui:SymbolIcon Stop24}"
+                           Command="{Binding StopConsoleCommand}"
+                           Visibility="{Binding IsConsoleRunning, Converter={StaticResource BoolToVisibility}}" />
+                <ui:Button DockPanel.Dock="Right" Margin="8,0,0,0" Appearance="Primary" Content="{loc:Tr Console_Run}"
+                           Icon="{ui:SymbolIcon Play24}" Command="{Binding RunConsoleCommand}" />
+                <TextBlock DockPanel.Dock="Left" Margin="8,0,8,0" VerticalAlignment="Center" Text="winget"
+                           FontFamily="Cascadia Mono, Consolas" Foreground="{DynamicResource TextFillColorSecondaryBrush}" />
+                <ui:TextBox x:Name="ConsoleBox" PlaceholderText="{loc:Tr Console_Placeholder}" FontFamily="Cascadia Mono, Consolas"
+                            Text="{Binding ConsoleInput, UpdateSourceTrigger=PropertyChanged}">
+                  <ui:TextBox.InputBindings>
+                    <KeyBinding Key="Enter" Command="{Binding RunConsoleCommand}" />
+                  </ui:TextBox.InputBindings>
+                </ui:TextBox>
+              </DockPanel>
               <DockPanel DockPanel.Dock="Top" Margin="16,8,8,4">
                 <ui:Button DockPanel.Dock="Right" Appearance="Transparent" Content="{loc:Tr Log_Clear}" Command="{Binding ClearLogCommand}" />
                 <ui:Button DockPanel.Dock="Right" Appearance="Transparent" Content="{loc:Tr Log_OpenFolder}" Command="{Binding OpenLogFolderCommand}" />

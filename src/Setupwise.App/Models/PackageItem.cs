@@ -43,6 +43,11 @@ public sealed partial class PackageItem : ObservableObject
     [NotifyPropertyChangedFor(nameof(Badge))]
     public partial bool IsInstalled { get; set; }
 
+    /// <summary>Excluded from updates with a winget pin.</summary>
+    [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(Badge))]
+    public partial bool IsPinned { get; set; }
+
     [ObservableProperty]
     public partial bool IsSelected { get; set; }
 
@@ -71,7 +76,10 @@ public sealed partial class PackageItem : ObservableObject
 
     public string? VersionText => HasUpdate ? $"{Version}  →  {AvailableVersion}" : Version;
 
-    public string? Badge => HasUpdate ? Loc.T("Badge_Update") : IsInstalled ? Loc.T("Badge_Installed") : null;
+    public string? Badge => HasUpdate ? Loc.T("Badge_Update")
+        : IsPinned ? Loc.T("Badge_Pinned")
+        : IsInstalled ? Loc.T("Badge_Installed")
+        : null;
 
     [RelayCommand]
     private void ToggleSelected() => IsSelected = !IsSelected;

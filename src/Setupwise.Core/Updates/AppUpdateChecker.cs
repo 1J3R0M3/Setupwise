@@ -3,7 +3,7 @@ using System.Text.Json.Serialization;
 
 namespace Setupwise.Core.Updates;
 
-public sealed record AppRelease(Version Version, Uri PageUrl);
+public sealed record AppRelease(AppVersion Version, Uri PageUrl);
 
 /// <summary>Checks GitHub Releases for a newer version of Setupwise.</summary>
 public sealed class AppUpdateChecker
@@ -19,43 +19,44 @@ public sealed class AppUpdateChecker
     }
 
     /// <summary>The newer release, or null if up to date or the check failed.</summary>
-    public async Task<AppRelease?> FindNewerAsync(Version current, CancellationToken cancellationToken = default)
+    /// <param name="includePreReleases">Also offer alpha/beta versions (GitHub pre-releases).</param>
+    public async Task<AppRelease?> FindNewerAsync(AppVersion current, bool includePreReleases = false, CancellationToken cancellationToken = default)
     {
         ArgumentNullException.ThrowIfNull(current);
         try
         {
-            using var request = new HttpRequestMessage(HttpMethod.Get, new Uri($"https://api.github.com/repos/{_repository}/releases/latest"));
+            // "releases/latest" never returns pre-releases, so the list is needed for them.
+            var url = includePreReleases
+                ? $"https://api.github.com/repos/{_repository}/releases?per_page=20"
+                : $"https://api.github.com/repos/{_repository}/releases/latest";
+            using var request = new HttpRequestMessage(HttpMethod.Get, new Uri(url));
             request.Headers.Accept.ParseAdd("application/vnd.github+json");
             using var response = await _http.SendAsync(request, cancellationToken).ConfigureAwait(false);
             if (!response.IsSuccessStatusCode) return null;
 
-            var release = await response.Content.ReadFromJsonAsync<GitHubRelease>(cancellationToken).ConfigureAwait(false);
-            if (release is null || release.Draft || release.Prerelease) return null;
-            if (!TryParseVersion(release.TagName, out var latest) || !Uri.TryCreate(release.HtmlUrl, UriKind.Absolute, out var page))
-                return null;
+            IReadOnlyList<GitHubRelease>? releases = includePreReleases
+                ? await response.Content.ReadFromJsonAsync<List<GitHubRelease>>(cancellationToken).ConfigureAwait(false)
+                : await response.Content.ReadFromJsonAsync<GitHubRelease>(cancellationToken).ConfigureAwait(false) is { } latest ? [latest] : null;
 
-            return Normalize(latest) > Normalize(current) ? new AppRelease(latest, page) : null;
+            return Newest(releases ?? [], includePreReleases) is { } newest && newest.Version > current ? newest : null;
         }
         catch (HttpRequestException) { return null; }
         catch (System.Text.Json.JsonException) { return null; }
         catch (TaskCanceledException) when (!cancellationToken.IsCancellationRequested) { return null; }
     }
 
-    /// <summary>Parses "v1.2.3", "1.2", "1.2.3-beta" (pre-release suffix is ignored).</summary>
-    public static bool TryParseVersion(string? tag, out Version version)
+    private static AppRelease? Newest(IEnumerable<GitHubRelease> releases, bool includePreReleases)
     {
-        version = new Version(0, 0);
-        if (string.IsNullOrWhiteSpace(tag)) return false;
-        var text = tag.Trim().TrimStart('v', 'V');
-        var dash = text.IndexOfAny(['-', '+']);
-        if (dash >= 0) text = text[..dash];
-        if (!Version.TryParse(text, out var parsed)) return false;
-        version = parsed;
-        return true;
+        AppRelease? newest = null;
+        foreach (var release in releases)
+        {
+            if (release.Draft || (release.Prerelease && !includePreReleases)) continue;
+            if (!AppVersion.TryParse(release.TagName, out var version) || !Uri.TryCreate(release.HtmlUrl, UriKind.Absolute, out var page))
+                continue;
+            if (newest is null || version > newest.Version) newest = new AppRelease(version, page);
+        }
+        return newest;
     }
-
-    private static Version Normalize(Version v) =>
-        new(v.Major, v.Minor, Math.Max(v.Build, 0), Math.Max(v.Revision, 0));
 
     private sealed class GitHubRelease
     {
