@@ -18,6 +18,9 @@ public sealed class AppSettings
     /// <summary>The update check also offers alpha/beta versions.</summary>
     public bool IncludePreReleases { get; set; }
 
+    /// <summary>Navigation sections the user folded in ("catalog", "own").</summary>
+    public List<string> CollapsedNavGroups { get; set; } = [];
+
     /// <summary>Updates the user skipped: package id → skipped version (shown again once a newer one appears).</summary>
     public Dictionary<string, string> SkippedUpdates
     {

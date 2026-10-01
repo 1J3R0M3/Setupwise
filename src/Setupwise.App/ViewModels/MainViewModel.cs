@@ -30,6 +30,12 @@ public sealed partial class NavItem : ObservableObject
         };
     }
 
+    public NavItem(PageViewModel page, string group, bool visible) : this(page)
+    {
+        Group = group;
+        IsVisible = visible;
+    }
+
     private NavItem(string? title, SymbolRegular symbol)
     {
         Page = null!;
@@ -43,11 +49,32 @@ public sealed partial class NavItem : ObservableObject
     /// <summary>An entry that runs an action instead of showing a page.</summary>
     public static NavItem ForAction(string title, SymbolRegular symbol, Action action) => new(title, symbol) { Action = action };
 
+    /// <summary>A section title that folds the entries of its <paramref name="group"/> in and out when clicked.</summary>
+    public static NavItem ForHeader(string title, string group, bool expanded, Action<NavItem> toggle)
+    {
+        var header = new NavItem(title, SymbolRegular.Empty) { IsHeader = true, Group = group, IsExpanded = expanded };
+        header.Action = () => toggle(header);
+        return header;
+    }
+
     public PageViewModel Page { get; }
     public bool IsSeparator { get; private init; }
-    public Action? Action { get; private init; }
+    public bool IsHeader { get; private init; }
+    public Action? Action { get; private set; }
     public string Title => Page?.Title ?? _title ?? string.Empty;
-    public SymbolRegular Symbol => Page?.Symbol ?? _symbol;
+    public SymbolRegular Symbol => IsHeader ? (IsExpanded ? SymbolRegular.ChevronDown16 : SymbolRegular.ChevronRight16) : Page?.Symbol ?? _symbol;
+
+    /// <summary>The foldable section this entry belongs to, if any.</summary>
+    public string? Group { get; init; }
+
+    /// <summary>For headers: whether the section is unfolded.</summary>
+    [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(Symbol))]
+    public partial bool IsExpanded { get; set; }
+
+    /// <summary>False while the entry's section is folded in.</summary>
+    [ObservableProperty]
+    public partial bool IsVisible { get; set; } = true;
 
     [ObservableProperty]
     [NotifyPropertyChangedFor(nameof(HasBadge))]
@@ -69,6 +96,7 @@ public sealed partial class MainViewModel : ObservableObject, IPackageActions
     private readonly NavItem _updatesNav;
     private readonly NavItem _installedNav;
     private readonly NavItem _newCategoryNav;
+    private readonly NavItem _ownCategoriesHeader;
     private readonly UserCategoriesService _categories;
     private CancellationTokenSource? _queueCancellation;
     private CancellationTokenSource? _consoleCancellation;
@@ -110,11 +138,20 @@ public sealed partial class MainViewModel : ObservableObject, IPackageActions
         NavItems.Add(new NavItem(Search));
         NavItems.Add(_updatesNav);
         NavItems.Add(_installedNav);
-        NavItems.Add(NavItem.Separator());
+
+        // Two foldable sections, so the list stays short with many categories (state is remembered).
+        var catalogExpanded = !settings.CollapsedNavGroups.Contains(CatalogGroup);
+        NavItems.Add(NavItem.ForHeader(Loc.T("Nav_Categories"), CatalogGroup, catalogExpanded, ToggleNavGroup));
         foreach (var category in catalog.Categories)
-            NavItems.Add(new NavItem(new CategoryViewModel(category, store, catalog.AppsIn(category.Id).Select(a => store.GetOrCreate(a.Id, a.Name.Get(Loc.Instance.Culture))))));
-        NavItems.Add(NavItem.Separator());
+        {
+            var page = new CategoryViewModel(category, store, catalog.AppsIn(category.Id).Select(a => store.GetOrCreate(a.Id, a.Name.Get(Loc.Instance.Culture))));
+            NavItems.Add(new NavItem(page, CatalogGroup, catalogExpanded));
+        }
+        var ownExpanded = !settings.CollapsedNavGroups.Contains(OwnGroup);
+        _ownCategoriesHeader = NavItem.ForHeader(Loc.T("Nav_OwnCategories"), OwnGroup, ownExpanded, ToggleNavGroup);
+        NavItems.Add(_ownCategoriesHeader);
         _newCategoryNav = NavItem.ForAction(Loc.T("Nav_NewCategory"), SymbolRegular.FolderAdd24, () => _categories.CreateInteractively([]));
+        _newCategoryNav.IsVisible = ownExpanded;
         NavItems.Add(_newCategoryNav);
         foreach (var category in _categories.Categories) AddCategoryNav(category, select: false);
         NavItems.Add(NavItem.Separator());
@@ -147,7 +184,7 @@ public sealed partial class MainViewModel : ObservableObject, IPackageActions
     {
         if (value is null || value.IsSeparator || value.Action is not null)
         {
-            // Separators and actions are not pages; go back to the page that was shown. Switching back
+            // Separators, section headers and actions are not pages; go back to the page that was shown. Switching back
             // right here, while the ListBox is still handling the click, made it re-apply its own
             // selection – the action then ran twice ("New category" dialog opened again).
             if (_navActionPending) return;
@@ -174,14 +211,34 @@ public sealed partial class MainViewModel : ObservableObject, IPackageActions
         _icons.Request(value.Page.VisiblePackages);
     }
 
+    // ---------- Foldable navigation sections ----------
+
+    private const string CatalogGroup = "catalog";
+    private const string OwnGroup = "own";
+
+    private void ToggleNavGroup(NavItem header) => SetNavGroupExpanded(header, !header.IsExpanded);
+
+    private void SetNavGroupExpanded(NavItem header, bool expanded)
+    {
+        if (header.IsExpanded == expanded) return;
+        header.IsExpanded = expanded;
+        foreach (var item in NavItems.Where(n => !n.IsHeader && n.Group == header.Group)) item.IsVisible = expanded;
+
+        var collapsed = _settings.CollapsedNavGroups;
+        collapsed.RemoveAll(g => g == header.Group);
+        if (!expanded && header.Group is not null) collapsed.Add(header.Group);
+        _settings.Save();
+    }
+
     // ---------- Own categories ----------
 
     private void AddCategoryNav(CustomCategoryViewModel category, bool select)
     {
         // Own categories are listed right after the "New category" entry, in creation order.
+        if (select) SetNavGroupExpanded(_ownCategoriesHeader, true); // show the new category
         var index = NavItems.IndexOf(_newCategoryNav) + 1;
         while (index < NavItems.Count && NavItems[index].Page is CustomCategoryViewModel) index++;
-        var nav = new NavItem(category);
+        var nav = new NavItem(category, OwnGroup, _ownCategoriesHeader.IsExpanded);
         NavItems.Insert(index, nav);
         if (select) SelectedNav = nav;
     }

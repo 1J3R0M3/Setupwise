@@ -18,6 +18,7 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) and 
 - `docs/requirements.md`: requirements and roadmap.
 
 ### Changed
+- Navigation: "Categories" and "My categories" are sections that can be folded in; the state is remembered.
 - App names in the catalog can be translated (e.g. "Mozilla Firefox (Deutsch)").
 - Polished German texts.
 

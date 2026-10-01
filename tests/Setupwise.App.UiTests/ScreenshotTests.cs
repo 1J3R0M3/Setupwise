@@ -119,6 +119,19 @@ public class ScreenshotTests
             Save(window, name + "-full", full: true);
         }
 
+        // Both navigation sections folded in.
+        foreach (var header in vm.NavItems.Where(n => n.IsHeader).ToList())
+        {
+            vm.SelectedNav = header;
+            Pump();
+        }
+        Save(window, $"{language}-{theme.ToString().ToLowerInvariant()}-zy-navigation-folded", full: false);
+        foreach (var header in vm.NavItems.Where(n => n.IsHeader).ToList())
+        {
+            vm.SelectedNav = header;
+            Pump();
+        }
+
         vm.IsLogOpen = true;
         vm.IsConsoleOpen = true;
         vm.ConsoleInput = "show --id Git.Git";
@@ -137,7 +150,9 @@ public class ScreenshotTests
         FrameworkElement target = root;
         if (full)
         {
-            var scroll = FindDescendants<ScrollViewer>(root).FirstOrDefault(s => s.Content is FrameworkElement { ActualHeight: > 0 } && s.ScrollableHeight > 0);
+            // Only the page's own scroll area – the navigation list scrolls too.
+            var page = (FrameworkElement)window.FindName("PageHost");
+            var scroll = FindDescendants<ScrollViewer>(page).FirstOrDefault(s => s.Content is FrameworkElement { ActualHeight: > 0 } && s.ScrollableHeight > 0);
             if (scroll?.Content is not FrameworkElement content) return; // page fits on screen
             target = content;
         }

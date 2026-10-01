@@ -58,6 +58,8 @@
   <Style x:Key="NavItemStyle" TargetType="ListBoxItem">
     <Setter Property="FocusVisualStyle" Value="{x:Null}" />
     <Setter Property="Margin" Value="0,1" />
+    <!-- Entries of a folded-in section -->
+    <Setter Property="Visibility" Value="{Binding IsVisible, Converter={StaticResource BoolToVisibility}}" />
     <Setter Property="Template">
       <Setter.Value>
         <ControlTemplate TargetType="ListBoxItem">
@@ -107,6 +109,33 @@
           <Setter.Value>
             <ControlTemplate TargetType="ListBoxItem">
               <Border Height="1" Margin="12,8" Background="{DynamicResource DividerStrokeColorDefaultBrush}" />
+            </ControlTemplate>
+          </Setter.Value>
+        </Setter>
+      </DataTrigger>
+      <!-- Section title that folds its entries in and out -->
+      <DataTrigger Binding="{Binding IsHeader}" Value="True">
+        <Setter Property="Margin" Value="0,10,0,2" />
+        <Setter Property="Template">
+          <Setter.Value>
+            <ControlTemplate TargetType="ListBoxItem">
+              <Border x:Name="Bd" Background="Transparent" CornerRadius="4" Height="28">
+                <DockPanel>
+                  <ui:SymbolIcon DockPanel.Dock="Right" Margin="0,0,12,0" FontSize="12" Symbol="{Binding Symbol}"
+                                 Foreground="{DynamicResource TextFillColorSecondaryBrush}" />
+                  <TextBlock Margin="14,0,8,0" VerticalAlignment="Center" Text="{Binding Title}" FontSize="12" FontWeight="SemiBold"
+                             TextTrimming="CharacterEllipsis" Foreground="{DynamicResource TextFillColorSecondaryBrush}" />
+                </DockPanel>
+              </Border>
+              <ControlTemplate.Triggers>
+                <Trigger Property="IsMouseOver" Value="True">
+                  <Setter TargetName="Bd" Property="Background" Value="{DynamicResource SubtleFillColorSecondaryBrush}" />
+                </Trigger>
+                <Trigger Property="IsKeyboardFocused" Value="True">
+                  <Setter TargetName="Bd" Property="BorderBrush" Value="{DynamicResource TextFillColorPrimaryBrush}" />
+                  <Setter TargetName="Bd" Property="BorderThickness" Value="1" />
+                </Trigger>
+              </ControlTemplate.Triggers>
             </ControlTemplate>
           </Setter.Value>
         </Setter>

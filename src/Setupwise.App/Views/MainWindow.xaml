@@ -190,7 +190,7 @@
           </Border>
 
           <!-- Current page -->
-          <ContentControl Content="{Binding CurrentPage}" Focusable="False" />
+          <ContentControl x:Name="PageHost" Content="{Binding CurrentPage}" Focusable="False" />
         </DockPanel>
       </Border>
     </Grid>

@@ -223,5 +223,7 @@
   "Settings_SkippedDesc": "Übersprungen: {0}",
   "Settings_SkippedReset": "Wieder anzeigen",
   "Settings_PreReleases": "Auch Beta-Versionen anbieten",
-  "Settings_PreReleasesDesc": "Bietet auch Testversionen von Setupwise an. Sie können Fehler enthalten."
+  "Settings_PreReleasesDesc": "Bietet auch Testversionen von Setupwise an. Sie können Fehler enthalten.",
+  "Nav_Categories": "Kategorien",
+  "Nav_OwnCategories": "Eigene Kategorien"
 }
