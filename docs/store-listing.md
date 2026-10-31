@@ -4,10 +4,8 @@ Texts for the Store listings in Partner Center (*Store listings → German / Eng
 numbers (apps, categories, profiles) come from `catalog/catalog.json`. Policy 10.2.4 requires the winget dependency at
 the **beginning** of the description. Rules and checklist: [store.md](store.md).
 
-Screenshots: rendered locally with `SETUPWISE_STORE_SCREENSHOTS=<icon cache folder>` and
-`dotnet test --project tests/Setupwise.App.UiTests --filter-class Setupwise.App.UiTests.StoreScreenshots`
-→ `artifacts/store-screenshots` (2160 × 1350 PNG, de/en × light/dark). Upload order: start, selection, category,
-updates, search, installed.
+Screenshots (uploaded in Partner Center, not kept in the repo): 2160 × 1350 PNG of the main window with app icons,
+in this order: start, your selection, a category, updates, search, installed.
 
 ---
 
