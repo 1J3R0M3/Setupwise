@@ -25,6 +25,10 @@ pwsh ./scripts/Test-CatalogIds.ps1                   # checks catalog ids agains
 pwsh ./scripts/Build-Msix.ps1                        # Windows only: Store package (MSIX) into artifacts/msix, needs the Windows SDK
 ```
 
+Store listing screenshots (Windows only, not in CI): set `SETUPWISE_STORE_SCREENSHOTS` to an icon cache folder and run
+`dotnet test --project tests/Setupwise.App.UiTests --filter-class Setupwise.App.UiTests.StoreScreenshots`
+→ `artifacts/store-screenshots`; texts in `docs/store-listing.md`.
+
 The WPF app **builds** on Linux thanks to `EnableWindowsTargeting`, but cannot run there.
 If no .NET SDK is installed, install one into a temporary folder with
 `dotnet-install.sh --channel 10.0 --install-dir <dir>` (do not install system-wide).
