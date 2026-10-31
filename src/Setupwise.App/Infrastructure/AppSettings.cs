@@ -28,6 +28,16 @@ public sealed class AppSettings
         set => field = new Dictionary<string, string>(value ?? [], StringComparer.OrdinalIgnoreCase); // JSON drops the comparer
     } = new(StringComparer.OrdinalIgnoreCase);
 
+    /// <summary>"Install for" / installation mode chosen per app in its context menu: package id → choice.</summary>
+    public Dictionary<string, AppInstallChoice> AppChoices
+    {
+        get;
+        set => field = new Dictionary<string, AppInstallChoice>(value ?? [], StringComparer.OrdinalIgnoreCase);
+    } = new(StringComparer.OrdinalIgnoreCase);
+
+    /// <summary>The welcome tour was shown (finished or skipped) and does not start by itself again.</summary>
+    public bool TourSeen { get; set; }
+
     /// <summary>winget options for install/upgrade (Settings → Installation).</summary>
     public InstallOptions Install { get; set; } = InstallOptions.Default;
 

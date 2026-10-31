@@ -81,6 +81,32 @@ public sealed partial class UpdatesViewModel : PackageListPageViewModel
     }
 }
 
+/// <summary>Updates the user skipped ("Skip this version"); the entry in the navigation only shows while there are some.</summary>
+public sealed partial class SkippedUpdatesViewModel : PackageListPageViewModel
+{
+    private readonly Func<Task> _showAllAgain;
+
+    public SkippedUpdatesViewModel(PackageStore store, Func<Task> showAllAgain) : base(store, [])
+    {
+        _showAllAgain = showAllAgain;
+    }
+
+    public override string Title => Loc.T("Nav_Skipped");
+    public override SymbolRegular Symbol => SymbolRegular.CalendarCancel24;
+    public override string? Subtitle => Loc.T("Skipped_Subtitle");
+    public override string EmptyText => Loc.T("Settings_SkippedNone");
+
+    /// <summary>Shows the apps whose update is skipped.</summary>
+    public void Show(IEnumerable<PackageItem> items)
+    {
+        Items.Clear();
+        foreach (var item in items.OrderBy(i => i.Name, StringComparer.CurrentCultureIgnoreCase)) Items.Add(item);
+    }
+
+    [RelayCommand(AllowConcurrentExecutions = false)]
+    private Task ShowAllAgainAsync() => _showAllAgain();
+}
+
 public sealed partial class InstalledViewModel : PackageListPageViewModel
 {
     private readonly PackageStore _store;

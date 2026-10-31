@@ -64,6 +64,26 @@ public sealed partial class PackageItem : ObservableObject
     [ObservableProperty]
     public partial ImageSource? Icon { get; set; }
 
+    /// <summary>"Install for" / installation mode chosen for this app in its context menu (null = settings).</summary>
+    [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(ChoiceText))]
+    public partial AppInstallChoice? Choice { get; set; }
+
+    /// <summary>Short summary of <see cref="Choice"/> for the card, e.g. "For all users · Silent".</summary>
+    public string? ChoiceText
+    {
+        get
+        {
+            if (Choice is not { IsEmpty: false } choice) return null;
+            var parts = new List<string>();
+            if (choice.Scope is { } scope && scope != InstallScope.Auto)
+                parts.Add(Loc.T(scope == InstallScope.Machine ? "Install_Scope_Machine" : "Install_Scope_User"));
+            if (choice.Mode is { } mode)
+                parts.Add(Loc.T(mode switch { InstallMode.Interactive => "Choice_Interactive", InstallMode.Default => "Choice_Progress", _ => "Choice_Silent" }));
+            return parts.Count == 0 ? null : string.Join(" · ", parts);
+        }
+    }
+
     public Brush TileBrush { get; }
 
     public string Initial => Name.FirstOrDefault(char.IsLetterOrDigit) is var c and not '\0'
@@ -74,7 +94,14 @@ public sealed partial class PackageItem : ObservableObject
 
     public OperationKind Kind => HasUpdate ? OperationKind.Upgrade : OperationKind.Install;
 
-    public string? VersionText => HasUpdate ? $"{Version}  →  {AvailableVersion}" : Version;
+    /// <summary>The update version the user skipped, while it is skipped.</summary>
+    [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(VersionText))]
+    public partial string? SkippedVersion { get; set; }
+
+    public string? VersionText => HasUpdate ? $"{Version}  →  {AvailableVersion}"
+        : SkippedVersion is not null ? $"{Version}  ·  {Loc.F("Skipped_Version", SkippedVersion)}"
+        : Version;
 
     public string? Badge => HasUpdate ? Loc.T("Badge_Update")
         : IsPinned ? Loc.T("Badge_Pinned")

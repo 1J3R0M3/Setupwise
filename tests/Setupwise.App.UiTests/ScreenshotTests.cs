@@ -15,6 +15,7 @@ using Setupwise.App.ViewModels;
 using Setupwise.App.Views;
 using Setupwise.Core.Catalog;
 using Setupwise.Core.Icons;
+using Setupwise.Core.Packages;
 using Wpf.Ui.Appearance;
 using Wpf.Ui.Controls;
 
@@ -108,6 +109,8 @@ public class ScreenshotTests
         vlc.Status = PackageStatus.Succeeded; vlc.StatusText = Loc.T("Status_Installed");
         sevenZip.Status = PackageStatus.Failed; sevenZip.StatusText = Loc.F("Status_Failed", "0x8A150011");
         vm.Categories.Create(language == "de" ? "PC von Oma" : "Grandma's PC", [firefox, vlc, store.Find("Zoom.Zoom")!]);
+        vm.SetChoice(firefox, new AppInstallChoice { Scope = InstallScope.Machine, Mode = InstallMode.Interactive });
+        vm.SkipUpdate(store.Updates.Last(u => u != firefox)); // fills "Skipped updates"
 
         var index = 0;
         foreach (var nav in vm.NavItems.Where(n => !n.IsSeparator && n.Action is null).ToList())

@@ -4,7 +4,8 @@
                     xmlns:conv="clr-namespace:Setupwise.App.Converters"
                     xmlns:models="clr-namespace:Setupwise.App.Models"
                     xmlns:controls="clr-namespace:Setupwise.App.Views.Controls"
-                    xmlns:services="clr-namespace:Setupwise.App.Services">
+                    xmlns:services="clr-namespace:Setupwise.App.Services"
+                    xmlns:loc="clr-namespace:Setupwise.App.Localization">
 
   <conv:BoolToVisibilityConverter x:Key="BoolToVisibility" />
   <conv:BoolToVisibilityConverter x:Key="InverseBoolToVisibility" Invert="True" />
@@ -199,6 +200,7 @@
           <ColumnDefinition Width="Auto" />
           <ColumnDefinition Width="Auto" />
           <ColumnDefinition Width="Auto" />
+          <ColumnDefinition Width="Auto" />
         </Grid.ColumnDefinitions>
 
         <controls:PackageTile Size="32" Margin="0,0,14,0" />
@@ -216,13 +218,22 @@
         <TextBlock Grid.Column="2" Margin="16,0,0,0" VerticalAlignment="Center" FontSize="12"
                    Text="{Binding VersionText}" Foreground="{DynamicResource TextFillColorSecondaryBrush}" />
 
-        <Border x:Name="BadgePill" Grid.Column="3" Margin="12,0,0,0" Style="{StaticResource Pill}"
+        <!-- "Install for" / installation mode chosen for this app in its context menu -->
+        <Border Grid.Column="3" Margin="12,0,0,0" Style="{StaticResource Pill}" ToolTip="{loc:Tr Choice_Tooltip}"
+                Visibility="{Binding ChoiceText, Converter={StaticResource NullToCollapsed}}">
+          <StackPanel Orientation="Horizontal">
+            <ui:SymbolIcon Symbol="Settings16" FontSize="12" Margin="0,0,4,0" Foreground="{DynamicResource TextFillColorSecondaryBrush}" />
+            <TextBlock Text="{Binding ChoiceText}" FontSize="12" Foreground="{DynamicResource TextFillColorSecondaryBrush}" />
+          </StackPanel>
+        </Border>
+
+        <Border x:Name="BadgePill" Grid.Column="4" Margin="12,0,0,0" Style="{StaticResource Pill}"
                 Visibility="{Binding Badge, Converter={StaticResource NullToCollapsed}}">
           <TextBlock x:Name="BadgeText" Text="{Binding Badge}" FontSize="12"
                      Foreground="{DynamicResource TextFillColorSecondaryBrush}" />
         </Border>
 
-        <Border x:Name="StatusPill" Grid.Column="4" Margin="8,0,0,0" Style="{StaticResource Pill}" Visibility="Collapsed">
+        <Border x:Name="StatusPill" Grid.Column="5" Margin="8,0,0,0" Style="{StaticResource Pill}" Visibility="Collapsed">
           <StackPanel>
             <TextBlock x:Name="StatusText" Text="{Binding StatusText}" FontSize="12"
                        Foreground="{DynamicResource TextFillColorSecondaryBrush}" />
