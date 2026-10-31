@@ -48,6 +48,10 @@ Add-AppxPackage -Register .\layout\AppxManifest.xml   # installs "Setupwise" int
 Get-AppxPackage Setupwise.Preview | Remove-AppxPackage # uninstall again
 ```
 
+Put `layout` in a folder with a **short path** (e.g. `C:\Temp\swmsix`): from a deep folder the registration failed
+with `0x80073CF0` / `0x80070003` ("path not found"). The package runs from that folder, so keep it until the package
+is removed again.
+
 `-Register` "registers an application in development mode … from a folder of unpackaged files". The `.msix` itself
 can only be installed after signing; the Store does that. Before a submission, run the **Windows App Certification
 Kit** on the `.msix` (Microsoft recommends it to find manifest and image problems).
@@ -175,12 +179,21 @@ These steps need the maintainer's account and cannot be done by Claude.
 
 ## Only testable on Windows or in Partner Center
 
-- Install via `Add-AppxPackage -Register`, start from the Start menu, real winget installs and updates from the
-  packaged app (winget is started as an App Execution Alias from inside the package).
+**Checked on 2026-10-31** (Windows 11, CI build `0.3.0-ci.18`, registered with `Add-AppxPackage -Register`, no
+installer version on the PC):
+- Starts from the Start menu entry; the log says `Store, packaged: True`. winget works from inside the package
+  (version, list of installed apps, available updates).
+- AppData redirection as documented: the real `%APPDATA%\Setupwise` and `%LOCALAPPDATA%\Setupwise` were not created;
+  `settings.json`, logs and icon cache are in
+  `%LOCALAPPDATA%\Packages\<PackageFamilyName>\LocalCache\{Roaming,Local}\Setupwise`.
+- Opening a `.setupwise` file (path with a space) starts the packaged Setupwise with the quoted path as argument.
+
+**Still open:**
+- Real winget installs and updates from the packaged app.
+- *Open log folder* (should open the `LocalCache` folder above), the imported selection on the page *Your selection*.
 - Whether `runas` works from the package (only relevant if self-elevation should come back).
-- Where settings and logs land (AppData redirection), *Open log folder*, sharing settings with an installed
-  installer version.
-- Double-click on a `.setupwise` file; the logos in Start menu, taskbar and *Open with*.
+- Sharing settings with an installed installer version.
+- The logos in Start menu, taskbar and *Open with*.
 - Windows App Certification Kit result.
 - Everything in Partner Center: name reservation, package validation (identity, version), certification, IARC rating,
   how the publisher name is shown.
