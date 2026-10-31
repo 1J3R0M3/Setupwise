@@ -45,7 +45,7 @@ unpacked folder from the CI artifact:
 
 ```powershell
 Add-AppxPackage -Register .\layout\AppxManifest.xml   # installs "Setupwise" into the Start menu
-Get-AppxPackage Setupwise.Preview | Remove-AppxPackage # uninstall again
+Get-AppxPackage 1J3R0M3.Setupwise | Remove-AppxPackage # uninstall again
 ```
 
 Put `layout` in a folder with a **short path** (e.g. `C:\Temp\swmsix`): from a deep folder the registration failed
@@ -156,7 +156,7 @@ These steps need the maintainer's account and cannot be done by Claude.
    - **Company:** needs a registered business (D-U-N-S number or official documents) and a work e-mail address on the
      company's domain.
 2. **Reserve the name** "Setupwise" in Partner Center (Apps and games → New product → MSIX or PWA app).
-3. **Send the product identity to Claude:** Product management → Product identity → `Package/Identity/Name`,
+3. ~~**Send the product identity to Claude**~~ – done 2026-10-31 (`1J3R0M3.Setupwise`): Product management → Product identity → `Package/Identity/Name`,
    `Package/Identity/Publisher` (`CN=…`) and `Package/Properties/PublisherDisplayName`. They go into
    `installer/msix/identity.json` (they are public in every Store package). A package built with other values is
    rejected on upload (*"PublisherDisplayName … does not match your publisher display name"*).
