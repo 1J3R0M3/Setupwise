@@ -72,7 +72,7 @@ public partial class App : Application
                            ?? throw new InvalidOperationException("The app catalog is missing from the build.");
         var catalog = CatalogLoader.Load(stream);
         foreach (var error in CatalogLoader.Validate(catalog)) AppLog.Write($"Catalog: {error}");
-        return catalog;
+        return catalog.For(AppPaths.Flavor);
     }
 
     private static HttpClient CreateHttpClient()

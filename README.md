@@ -62,4 +62,6 @@ No telemetry, no account. Setupwise only contacts app vendors' websites (for ico
 ## License
 
 Setupwise is free software under the [GNU General Public License v3.0](LICENSE) or later.
+The catalog categories are based on [WinUtil](https://github.com/ChrisTitusTech/winutil) by Chris Titus Tech
+(MIT license), see [THIRD-PARTY-NOTICES.md](THIRD-PARTY-NOTICES.md).
 Setupwise is not affiliated with Microsoft. The apps it installs are provided by their respective vendors under their own licenses.

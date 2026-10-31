@@ -125,6 +125,7 @@
   "Settings_Winget": "winget {0}",
   "Settings_WingetMissing": "winget nicht gefunden",
   "Settings_License": "Freie Software unter der GNU General Public License v3.",
+  "Settings_Credits": "App-Kategorien basierend auf WinUtil von Chris Titus Tech (MIT-Lizenz).",
   "Settings_GitHub": "Projekt auf GitHub",
 
   "Error_Title": "Etwas ist schiefgelaufen",

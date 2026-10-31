@@ -10,6 +10,14 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) and 
   no own update check and no *Run as administrator*, opens `.setupwise` files via the package manifest, and opens the
   redirected log folder. See `docs/store.md`.
 
+### Changed
+- The catalog now uses the categories of [WinUtil](https://github.com/ChrisTitusTech/winutil) by Chris Titus Tech
+  (Browsers, Communication, Development, Documents, Games, Microsoft tools, Multimedia, Pro tools, Self-hosted,
+  Utilities) and includes its apps: 256 apps instead of 85, all with English and German descriptions. Credit in
+  *Settings → About* and `THIRD-PARTY-NOTICES.md`.
+- A few apps that change Windows itself or replace other vendors' clients are left out of the Store build
+  (`"hideInStore"` in the catalog).
+
 ## [0.3.0] - 2026-10-31
 
 ### Added

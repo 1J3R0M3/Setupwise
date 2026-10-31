@@ -236,6 +236,7 @@
             <TextBlock Text="{Binding VersionText}" Style="{StaticResource Caption}" />
             <TextBlock Text="{Binding WingetText}" Style="{StaticResource Caption}" />
             <TextBlock Text="{loc:Tr Settings_License}" Style="{StaticResource Caption}" Margin="0,6,0,0" />
+            <TextBlock Text="{loc:Tr Settings_Credits}" Style="{StaticResource Caption}" TextWrapping="Wrap" />
           </StackPanel>
         </DockPanel>
       </Border>

@@ -13,8 +13,13 @@ No C# needed – you only edit [`catalog/catalog.json`](catalog/catalog.json).
      "description": { "en": "What it does, in one short sentence.", "de": "Dasselbe auf Deutsch." } }
    ```
 3. Optionally add the id to a profile under `profiles`.
+4. Add `"hideInStore": true` if the app should not appear in the Microsoft Store build (tools that change Windows
+   itself, or unofficial clients for other vendors' services).
 
-**What belongs in the catalog?** Well-known apps that many people install on a new PC, from the official vendor. No trial-ware traps, no adware, no niche tools.
+**What belongs in the catalog?** The categories and their apps follow [WinUtil](https://github.com/ChrisTitusTech/winutil)
+by Chris Titus Tech (MIT, see [THIRD-PARTY-NOTICES.md](THIRD-PARTY-NOTICES.md)): well-known apps from the official
+vendor, plus power-user tools in *Pro tools*, *Microsoft tools* and *Self-hosted*. No trial-ware traps, no adware.
+If WinUtil lists an app in another category, use the same category.
 
 CI checks automatically that the JSON is valid, every category and profile reference exists, and the id exists in [microsoft/winget-pkgs](https://github.com/microsoft/winget-pkgs).
 

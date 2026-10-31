@@ -19,7 +19,7 @@ Setupwise benötigt winget (Windows-Paketverwaltung), das als „App-Installer�
 Neuer PC, alles neu installieren? Setupwise richtet deinen Windows-PC in wenigen Minuten ein: Programme aussuchen, auf „Installieren“ klicken, fertig. Kein Durchklicken durch Dutzende Installer, keine Suche nach Download-Seiten, keine Toolbars.
 
 So funktioniert es:
-• Wähle ein Profil wie „Grundausstattung“, „Homeoffice“ oder „Gaming-PC“ – oder stelle dir deine Auswahl aus über 80 bewährten Programmen in 11 Kategorien zusammen.
+• Wähle ein Profil wie „Grundausstattung“, „Homeoffice“ oder „Gaming-PC“ – oder stelle dir deine Auswahl aus über 250 bewährten Programmen in 10 Kategorien zusammen.
 • Setupwise installiert alles nacheinander über winget, direkt aus den offiziellen Quellen der Hersteller, und zeigt dir den Fortschritt jedes Programms.
 • Fehlt etwas im Katalog? Durchsuche den gesamten winget-Katalog mit tausenden Programmen.
 
@@ -38,7 +38,7 @@ Setupwise ist kostenlos und quelloffen (GPL-3.0), ohne Werbung, ohne Konto und o
 ### Produktfeatures
 
 ```
-Programme aus über 80 bewährten Apps in 11 Kategorien auswählen
+Programme aus über 250 bewährten Apps in 10 Kategorien auswählen
 Profile wie Grundausstattung, Homeoffice, Gaming-PC, Creator und Entwickler
 Alles mit einem Klick über winget installieren – aus den offiziellen Quellen der Hersteller
 Den gesamten winget-Katalog durchsuchen
@@ -103,7 +103,7 @@ Setupwise requires winget (Windows Package Manager), which comes with Windows 10
 New PC, everything to install again? Setupwise sets up your Windows PC in minutes: pick your apps, click "Install", done. No clicking through dozens of installers, no hunting for download pages, no toolbars.
 
 How it works:
-• Pick a profile such as "Essentials", "Home office" or "Gaming PC" – or build your own selection from more than 80 proven apps in 11 categories.
+• Pick a profile such as "Essentials", "Home office" or "Gaming PC" – or build your own selection from more than 250 proven apps in 10 categories.
 • Setupwise installs everything one after another with winget, straight from the vendors' official sources, and shows the progress of each app.
 • Missing something in the catalog? Search the whole winget catalog with thousands of apps.
 
@@ -122,7 +122,7 @@ Setupwise is free and open source (GPL-3.0), with no ads, no account and no tele
 ### Product features
 
 ```
-Pick from more than 80 proven apps in 11 categories
+Pick from more than 250 proven apps in 10 categories
 Profiles: Essentials, Home office, Gaming PC, Creator and Developer
 Install everything with one click via winget – from the vendors' official sources
 Search the whole winget catalog

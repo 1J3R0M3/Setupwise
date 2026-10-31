@@ -26,6 +26,8 @@ Size: **S** = hours, **M** = a day or two, **L** = several days, needs design an
 | R-15 | [Code signing](#r-15-code-signing) | – | decision needed |
 | R-16 | [License: GPL or MIT](#r-16-license-gpl-or-mit) | – | decision needed |
 | R-17 | [Release policy](#r-17-release-policy) | – | proposal below |
+| R-18 | [Catalog based on WinUtil](#r-18-catalog-based-on-winutil) | M | done (branch `feature/winutil-catalog`) |
+| R-19 | [Windows tweaks (installer build only)](#r-19-windows-tweaks-installer-build-only) | L | open |
 
 ---
 
@@ -266,3 +268,35 @@ outside contributors.
 - **1.0:** when the Store package (R-13) is live and the features above are stable.
 - Before each release: `[Unreleased]` in `CHANGELOG.md` is complete, CI is green, the CI screenshots were checked, and
   at least one real install and update ran on Windows.
+
+---
+
+## R-18 Catalog based on WinUtil
+
+**Wanted:** take over the app categories and the app-to-category assignment of
+[WinUtil](https://github.com/ChrisTitusTech/winutil) by Chris Titus Tech, keep Setupwise's own icons (loaded from the
+vendor homepages) and credit WinUtil.
+
+**Built:** `catalog/catalog.json` uses WinUtil's ten categories and contains all of its winget apps (256 apps; the two
+`msstore:` entries – ChatGPT and WhatsApp – are left out because the catalog only takes winget ids). Apps Setupwise
+already had keep their texts; the 19 apps WinUtil does not list were sorted into the closest category. All
+descriptions are Setupwise's own, in English and German. Every id was checked against `microsoft/winget-pkgs`.
+WinUtil is MIT-licensed: the license text is in the `catalog.json` header (embedded into the app) and in
+`THIRD-PARTY-NOTICES.md`; *Settings → About* names WinUtil. `"hideInStore": true` keeps a few apps out of the Store
+build (`AppCatalog.For(BuildFlavor)`).
+
+**Later:** a small script that compares the catalog with WinUtil's current `applications.json` and lists new apps and
+changed categories.
+
+## R-19 Windows tweaks (installer build only)
+
+**Wanted:** WinUtil's tweaks (privacy, Explorer and taskbar settings, services, cleanup) in Setupwise – but only in the
+installer/zip build. The Store build stays an app installer and links to the GitHub release for the full version.
+
+**Proposal:** a separate project `Setupwise.Tweaks` that only the Standard flavour references, so the Store package
+contains no tweak code at all. Tweaks are data (registry values, services, commands) with an undo entry each, bundled
+with the app and never downloaded at runtime. Every tweak needs admin rights, so it builds on R-11. Tweaks that turn off
+security features (Defender, SmartScreen, UAC, Windows Update) stay out or need an explicit warning. WinUtil's
+`config/tweaks.json` (MIT) can be the source; credit it like the catalog.
+
+**Size:** L – needs real testing on Windows for each tweak and its undo.

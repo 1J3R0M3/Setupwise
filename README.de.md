@@ -52,4 +52,6 @@ Keine Telemetrie, kein Konto. Setupwise kontaktiert nur die Websites der Herstel
 ## Lizenz
 
 Setupwise ist freie Software unter der [GNU General Public License v3.0](LICENSE) oder neuer.
+Die Katalog-Kategorien basieren auf [WinUtil](https://github.com/ChrisTitusTech/winutil) von Chris Titus Tech
+(MIT-Lizenz), siehe [THIRD-PARTY-NOTICES.md](THIRD-PARTY-NOTICES.md).
 Setupwise steht in keiner Verbindung zu Microsoft. Die installierten Programme stammen von ihren jeweiligen Herstellern und unterliegen deren Lizenzen.

@@ -68,6 +68,9 @@ If no .NET SDK is installed, install one into a temporary folder with
 
 Add apps to `catalog/catalog.json` (`id` = exact winget id, `category`, `description` with `en` + `de`).
 Check the id exists (`Test-CatalogIds.ps1`); CI checks it too. Only well-known apps from the official vendor.
+Categories and the app-to-category assignment follow WinUtil (`ChrisTitusTech/winutil` → `config/applications.json`,
+MIT – the license text stays in the `catalog.json` header and `THIRD-PARTY-NOTICES.md`). Descriptions are our own,
+short, en + de. `"hideInStore": true` hides an app in the Store build (`AppCatalog.For`).
 
 ## Data on the user's PC
 

@@ -88,7 +88,7 @@ public class ScreenshotTests
         var icons = new IconLoader(new IconService(http, Path.Combine(Path.GetTempPath(), "setupwise-ui-icons")), packages, store) { Enabled = false };
 
         using var catalogStream = typeof(App).Assembly.GetManifestResourceStream("Setupwise.catalog.json")!;
-        var catalog = CatalogLoader.Load(catalogStream);
+        var catalog = CatalogLoader.Load(catalogStream).For(AppPaths.Flavor);
 
         var vm = new MainViewModel(catalog, store, packages, icons, settings, http);
         var window = new MainWindow { DataContext = vm, Width = 1200, Height = 820, WindowBackdropType = WindowBackdropType.None };

@@ -1,5 +1,6 @@
 using System.Globalization;
 using Setupwise.Core.Catalog;
+using Setupwise.Core.Distribution;
 
 namespace Setupwise.Core.Tests;
 
@@ -60,6 +61,44 @@ public class CatalogTests
         Assert.Contains(errors, e => e.Contains("invalid winget id", StringComparison.Ordinal));
         Assert.Contains(errors, e => e.Contains("unknown category 'missing'", StringComparison.Ordinal));
         Assert.Contains(errors, e => e.Contains("unknown app 'Nope.Nope'", StringComparison.Ordinal));
+    }
+
+    [Fact]
+    public void Store_build_leaves_out_hidden_apps_and_what_becomes_empty()
+    {
+        var catalog = CatalogLoader.Load("""
+            {
+              "categories": [ { "id": "tools", "name": "Tools" }, { "id": "tweaks", "name": "Tweaks" } ],
+              "apps": [
+                { "id": "Vendor.App", "name": "App", "category": "tools" },
+                { "id": "Vendor.Tweak", "name": "Tweak", "category": "tweaks", "hideInStore": true },
+              ],
+              "profiles": [
+                { "id": "mixed", "name": "Mixed", "apps": [ "Vendor.App", "Vendor.Tweak" ] },
+                { "id": "only-hidden", "name": "Only hidden", "apps": [ "Vendor.Tweak" ] }
+              ]
+            }
+            """);
+
+        var store = catalog.For(BuildFlavor.Store);
+
+        Assert.Equal(["Vendor.App"], store.Apps.Select(a => a.Id));
+        Assert.Equal(["tools"], store.Categories.Select(c => c.Id));
+        Assert.Equal(["Vendor.App"], Assert.Single(store.Profiles).Apps);
+        Assert.Empty(CatalogLoader.Validate(store));
+        Assert.Same(catalog, catalog.For(BuildFlavor.Standard));
+    }
+
+    [Fact]
+    public void Shipped_catalog_is_valid_in_the_Store_build()
+    {
+        using var stream = File.OpenRead(Path.Combine(AppContext.BaseDirectory, "catalog.json"));
+        var catalog = CatalogLoader.Load(stream);
+        var store = catalog.For(BuildFlavor.Store);
+
+        Assert.Empty(CatalogLoader.Validate(store));
+        Assert.Contains(catalog.Apps, a => a.HideInStore);
+        Assert.Equal(catalog.Profiles.Select(p => p.Apps.Count), store.Profiles.Select(p => p.Apps.Count)); // profiles stay complete
     }
 
     [Theory]
