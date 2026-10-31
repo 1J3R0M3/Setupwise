@@ -26,7 +26,7 @@ Size: **S** = hours, **M** = a day or two, **L** = several days, needs design an
 | R-15 | [Code signing](#r-15-code-signing) | – | decision needed |
 | R-16 | [License: GPL or MIT](#r-16-license-gpl-or-mit) | – | decision needed |
 | R-17 | [Release policy](#r-17-release-policy) | – | proposal below |
-| R-18 | [Catalog based on WinUtil](#r-18-catalog-based-on-winutil) | M | done (branch `feature/winutil-catalog`) |
+| R-18 | [Catalog based on WinUtil](#r-18-catalog-based-on-winutil) | M | done (unreleased) |
 | R-19 | [Windows tweaks (installer build only)](#r-19-windows-tweaks-installer-build-only) | L | open |
 
 ---
