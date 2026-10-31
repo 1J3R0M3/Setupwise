@@ -1,0 +1,578 @@
+{
+  // Windows tweaks for the installer/zip build of Setupwise (R-19). Not part of the Microsoft Store build.
+  // Registry values only, each with the value that undoes it ("undo": null = delete the value again).
+  // Taken from WinUtil by Chris Titus Tech (https://github.com/ChrisTitusTech/winutil, config/tweaks.json,
+  // commit b521c90) – MIT license, see the header of catalog.json and THIRD-PARTY-NOTICES.md. Texts are our own.
+  // "source" names the WinUtil entry. Hives: HKCU, HKLM, HKU (HKLM and HKU need administrator rights).
+  "schemaVersion": 1,
+
+  "categories": [
+    { "id": "privacy",    "icon": "ShieldLock24",  "name": { "en": "Privacy", "de": "Datenschutz" } },
+    { "id": "appearance", "icon": "PaintBrush24",  "name": { "en": "Explorer & taskbar", "de": "Explorer & Taskleiste" } },
+    { "id": "system",     "icon": "Settings24",    "name": { "en": "System & input", "de": "System & Eingabe" } }
+  ],
+
+  "tweaks": [
+    {
+      "id": "telemetry",
+      "category": "privacy",
+      "source": "WPFTweaksTelemetry",
+      "name": {
+        "en": "Turn off telemetry",
+        "de": "Telemetrie abschalten"
+      },
+      "description": {
+        "en": "Sends as little diagnostic data to Microsoft as Windows allows, no advertising ID, no tailored experiences.",
+        "de": "Schickt so wenig Diagnosedaten an Microsoft wie möglich, keine Werbe-ID, keine „maßgeschneiderten Erlebnisse“."
+      },
+      "registry": [
+        {
+          "path": "HKCU\\Software\\Microsoft\\Windows\\CurrentVersion\\AdvertisingInfo",
+          "name": "Enabled",
+          "type": "DWord",
+          "apply": "0",
+          "undo": null
+        },
+        {
+          "path": "HKCU\\Software\\Microsoft\\Windows\\CurrentVersion\\Privacy",
+          "name": "TailoredExperiencesWithDiagnosticDataEnabled",
+          "type": "DWord",
+          "apply": "0",
+          "undo": null
+        },
+        {
+          "path": "HKCU\\Software\\Microsoft\\Speech_OneCore\\Settings\\OnlineSpeechPrivacy",
+          "name": "HasAccepted",
+          "type": "DWord",
+          "apply": "0",
+          "undo": null
+        },
+        {
+          "path": "HKCU\\Software\\Microsoft\\Input\\TIPC",
+          "name": "Enabled",
+          "type": "DWord",
+          "apply": "0",
+          "undo": null
+        },
+        {
+          "path": "HKCU\\Software\\Microsoft\\InputPersonalization",
+          "name": "RestrictImplicitInkCollection",
+          "type": "DWord",
+          "apply": "1",
+          "undo": null
+        },
+        {
+          "path": "HKCU\\Software\\Microsoft\\InputPersonalization",
+          "name": "RestrictImplicitTextCollection",
+          "type": "DWord",
+          "apply": "1",
+          "undo": null
+        },
+        {
+          "path": "HKCU\\Software\\Microsoft\\InputPersonalization\\TrainedDataStore",
+          "name": "HarvestContacts",
+          "type": "DWord",
+          "apply": "0",
+          "undo": null
+        },
+        {
+          "path": "HKCU\\Software\\Microsoft\\Personalization\\Settings",
+          "name": "AcceptedPrivacyPolicy",
+          "type": "DWord",
+          "apply": "0",
+          "undo": null
+        },
+        {
+          "path": "HKLM\\SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Policies\\DataCollection",
+          "name": "AllowTelemetry",
+          "type": "DWord",
+          "apply": "0",
+          "undo": null
+        },
+        {
+          "path": "HKCU\\Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\Advanced",
+          "name": "Start_TrackProgs",
+          "type": "DWord",
+          "apply": "0",
+          "undo": null
+        },
+        {
+          "path": "HKLM\\SOFTWARE\\Policies\\Microsoft\\Windows\\System",
+          "name": "PublishUserActivities",
+          "type": "DWord",
+          "apply": "0",
+          "undo": null
+        },
+        {
+          "path": "HKCU\\Software\\Microsoft\\Siuf\\Rules",
+          "name": "NumberOfSIUFInPeriod",
+          "type": "DWord",
+          "apply": "0",
+          "undo": null
+        }
+      ]
+    },
+    {
+      "id": "activity-history",
+      "category": "privacy",
+      "source": "WPFTweaksActivity",
+      "name": {
+        "en": "Turn off activity history",
+        "de": "Aktivitätsverlauf abschalten"
+      },
+      "description": {
+        "en": "Windows no longer records or uploads which apps and files you used. Clipboard history keeps working.",
+        "de": "Windows zeichnet nicht mehr auf, welche Programme und Dateien du benutzt hast, und lädt das nicht hoch. Der Zwischenablage-Verlauf funktioniert weiter."
+      },
+      "registry": [
+        {
+          "path": "HKLM\\SOFTWARE\\Policies\\Microsoft\\Windows\\System",
+          "name": "EnableActivityFeed",
+          "type": "DWord",
+          "apply": "1",
+          "undo": null
+        },
+        {
+          "path": "HKLM\\SOFTWARE\\Policies\\Microsoft\\Windows\\System",
+          "name": "PublishUserActivities",
+          "type": "DWord",
+          "apply": "0",
+          "undo": null
+        },
+        {
+          "path": "HKLM\\SOFTWARE\\Policies\\Microsoft\\Windows\\System",
+          "name": "UploadUserActivities",
+          "type": "DWord",
+          "apply": "0",
+          "undo": null
+        }
+      ]
+    },
+    {
+      "id": "location",
+      "category": "privacy",
+      "source": "WPFTweaksLocation",
+      "name": {
+        "en": "Turn off location tracking",
+        "de": "Standortermittlung abschalten"
+      },
+      "description": {
+        "en": "Apps can no longer ask for your location; offline maps are no longer updated automatically.",
+        "de": "Programme können deinen Standort nicht mehr abfragen; Offline-Karten werden nicht mehr automatisch aktualisiert."
+      },
+      "registry": [
+        {
+          "path": "HKLM\\SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\CapabilityAccessManager\\ConsentStore\\location",
+          "name": "Value",
+          "type": "String",
+          "apply": "Deny",
+          "undo": "Allow"
+        },
+        {
+          "path": "HKLM\\SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion\\Sensor\\Overrides\\{BFA794E4-F964-4FDB-90F6-51056BFE4B44}",
+          "name": "SensorPermissionState",
+          "type": "DWord",
+          "apply": "0",
+          "undo": "1"
+        },
+        {
+          "path": "HKLM\\SYSTEM\\Maps",
+          "name": "AutoUpdateEnabled",
+          "type": "DWord",
+          "apply": "0",
+          "undo": "1"
+        }
+      ]
+    },
+    {
+      "id": "consumer-features",
+      "category": "privacy",
+      "source": "WPFTweaksConsumerFeatures",
+      "name": {
+        "en": "No suggested apps",
+        "de": "Keine vorgeschlagenen Apps"
+      },
+      "description": {
+        "en": "Windows no longer installs promoted apps and games by itself and shows fewer Store suggestions.",
+        "de": "Windows installiert keine beworbenen Apps und Spiele mehr von selbst und zeigt weniger Store-Vorschläge."
+      },
+      "registry": [
+        {
+          "path": "HKLM\\SOFTWARE\\Policies\\Microsoft\\Windows\\CloudContent",
+          "name": "DisableWindowsConsumerFeatures",
+          "type": "DWord",
+          "apply": "1",
+          "undo": null
+        }
+      ]
+    },
+    {
+      "id": "device-companion-apps",
+      "category": "privacy",
+      "source": "WPFTweaksPreventDeviceMetadataFromNetwork",
+      "name": {
+        "en": "No companion apps for devices",
+        "de": "Keine Begleit-Apps für Geräte"
+      },
+      "description": {
+        "en": "Plugging in a device (e.g. a monitor) no longer installs extra vendor software or ads.",
+        "de": "Beim Anschließen eines Geräts (z. B. eines Monitors) wird keine zusätzliche Hersteller-Software oder Werbung mehr installiert."
+      },
+      "registry": [
+        {
+          "path": "HKLM\\SOFTWARE\\Policies\\Microsoft\\Windows\\Device Metadata",
+          "name": "PreventDeviceMetadataFromNetwork",
+          "type": "DWord",
+          "apply": "1",
+          "undo": null
+        }
+      ]
+    },
+    {
+      "id": "bing-search",
+      "category": "privacy",
+      "source": "WPFToggleBingSearch",
+      "name": {
+        "en": "No Bing results in Windows search",
+        "de": "Keine Bing-Ergebnisse in der Windows-Suche"
+      },
+      "description": {
+        "en": "The search in the Start menu only searches your PC, not the web.",
+        "de": "Die Suche im Startmenü durchsucht nur noch deinen PC, nicht das Internet."
+      },
+      "registry": [
+        {
+          "path": "HKCU\\Software\\Microsoft\\Windows\\CurrentVersion\\Search",
+          "name": "BingSearchEnabled",
+          "type": "DWord",
+          "apply": "0",
+          "undo": "1"
+        }
+      ]
+    },
+    {
+      "id": "dark-mode",
+      "category": "appearance",
+      "source": "WPFToggleDarkMode",
+      "name": {
+        "en": "Dark mode",
+        "de": "Dunkler Modus"
+      },
+      "description": {
+        "en": "Dark theme for Windows and apps.",
+        "de": "Dunkles Design für Windows und Programme."
+      },
+      "registry": [
+        {
+          "path": "HKCU\\SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Themes\\Personalize",
+          "name": "AppsUseLightTheme",
+          "type": "DWord",
+          "apply": "0",
+          "undo": "1"
+        },
+        {
+          "path": "HKCU\\SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Themes\\Personalize",
+          "name": "SystemUsesLightTheme",
+          "type": "DWord",
+          "apply": "0",
+          "undo": "1"
+        }
+      ]
+    },
+    {
+      "id": "file-extensions",
+      "category": "appearance",
+      "source": "WPFToggleShowExt",
+      "name": {
+        "en": "Show file extensions",
+        "de": "Dateiendungen anzeigen"
+      },
+      "description": {
+        "en": "File Explorer shows endings like .exe or .pdf – makes fake files easier to spot.",
+        "de": "Der Explorer zeigt Endungen wie .exe oder .pdf – so erkennst du getarnte Dateien leichter."
+      },
+      "registry": [
+        {
+          "path": "HKCU\\Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\Advanced",
+          "name": "HideFileExt",
+          "type": "DWord",
+          "apply": "0",
+          "undo": "1"
+        }
+      ],
+      "restartExplorer": true
+    },
+    {
+      "id": "hidden-files",
+      "category": "appearance",
+      "source": "WPFToggleHiddenFiles",
+      "name": {
+        "en": "Show hidden files",
+        "de": "Versteckte Dateien anzeigen"
+      },
+      "description": {
+        "en": "File Explorer also shows hidden files and folders.",
+        "de": "Der Explorer zeigt auch versteckte Dateien und Ordner."
+      },
+      "registry": [
+        {
+          "path": "HKCU\\Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\Advanced",
+          "name": "Hidden",
+          "type": "DWord",
+          "apply": "1",
+          "undo": "0"
+        }
+      ],
+      "restartExplorer": true
+    },
+    {
+      "id": "taskbar-left",
+      "category": "appearance",
+      "source": "WPFToggleTaskbarAlignment",
+      "name": {
+        "en": "Taskbar icons on the left",
+        "de": "Taskleiste linksbündig"
+      },
+      "description": {
+        "en": "Start button and icons on the left, like in Windows 10.",
+        "de": "Start-Button und Symbole links, wie bei Windows 10."
+      },
+      "registry": [
+        {
+          "path": "HKCU\\Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\Advanced",
+          "name": "TaskbarAl",
+          "type": "DWord",
+          "apply": "0",
+          "undo": "1"
+        }
+      ],
+      "restartExplorer": true
+    },
+    {
+      "id": "taskbar-search",
+      "category": "appearance",
+      "source": "WPFToggleTaskbarSearch",
+      "name": {
+        "en": "Hide the search box in the taskbar",
+        "de": "Suchfeld in der Taskleiste ausblenden"
+      },
+      "description": {
+        "en": "Searching still works by opening Start and typing.",
+        "de": "Suchen geht weiterhin: Startmenü öffnen und lostippen."
+      },
+      "registry": [
+        {
+          "path": "HKCU\\Software\\Microsoft\\Windows\\CurrentVersion\\Search",
+          "name": "SearchboxTaskbarMode",
+          "type": "DWord",
+          "apply": "0",
+          "undo": "1"
+        }
+      ]
+    },
+    {
+      "id": "task-view",
+      "category": "appearance",
+      "source": "WPFToggleTaskView",
+      "name": {
+        "en": "Hide the Task View button",
+        "de": "Taskansicht-Button ausblenden"
+      },
+      "description": {
+        "en": "Removes the Task View button from the taskbar (Win+Tab still works).",
+        "de": "Entfernt den Taskansicht-Button aus der Taskleiste (Win+Tab funktioniert weiter)."
+      },
+      "registry": [
+        {
+          "path": "HKCU\\Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\Advanced",
+          "name": "ShowTaskViewButton",
+          "type": "DWord",
+          "apply": "0",
+          "undo": "1"
+        }
+      ]
+    },
+    {
+      "id": "end-task",
+      "category": "appearance",
+      "source": "WPFTweaksEndTaskOnTaskbar",
+      "name": {
+        "en": "“End task” in the taskbar",
+        "de": "„Task beenden“ in der Taskleiste"
+      },
+      "description": {
+        "en": "Right-click a program in the taskbar to close it even if it hangs.",
+        "de": "Per Rechtsklick auf ein Programm in der Taskleiste lässt es sich beenden, auch wenn es hängt."
+      },
+      "registry": [
+        {
+          "path": "HKCU\\Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\Advanced\\TaskbarDeveloperSettings",
+          "name": "TaskbarEndTask",
+          "type": "DWord",
+          "apply": "1",
+          "undo": null
+        }
+      ]
+    },
+    {
+      "id": "numlock",
+      "category": "system",
+      "source": "WPFToggleNumLock",
+      "name": {
+        "en": "Num Lock on at startup",
+        "de": "Num-Taste beim Start an"
+      },
+      "description": {
+        "en": "The number pad works right away after starting the PC.",
+        "de": "Der Ziffernblock funktioniert direkt nach dem Start des PCs."
+      },
+      "registry": [
+        {
+          "path": "HKU\\.Default\\Control Panel\\Keyboard",
+          "name": "InitialKeyboardIndicators",
+          "type": "String",
+          "apply": "2",
+          "undo": "0"
+        },
+        {
+          "path": "HKCU\\Control Panel\\Keyboard",
+          "name": "InitialKeyboardIndicators",
+          "type": "String",
+          "apply": "2",
+          "undo": "0"
+        }
+      ]
+    },
+    {
+      "id": "sticky-keys",
+      "category": "system",
+      "source": "WPFToggleStickyKeys",
+      "name": {
+        "en": "No Sticky Keys prompt",
+        "de": "Keine Einrastfunktion-Abfrage"
+      },
+      "description": {
+        "en": "Pressing Shift five times no longer opens the Sticky Keys prompt – handy for gaming.",
+        "de": "Fünfmal Umschalt drücken öffnet nicht mehr die Abfrage zur Einrastfunktion – praktisch beim Spielen."
+      },
+      "registry": [
+        {
+          "path": "HKCU\\Control Panel\\Accessibility\\StickyKeys",
+          "name": "Flags",
+          "type": "String",
+          "apply": "58",
+          "undo": "506"
+        }
+      ]
+    },
+    {
+      "id": "mouse-acceleration",
+      "category": "system",
+      "source": "WPFToggleMouseAcceleration",
+      "name": {
+        "en": "Turn off mouse acceleration",
+        "de": "Mausbeschleunigung abschalten"
+      },
+      "description": {
+        "en": "The cursor moves exactly as far as the mouse, independent of speed – preferred by many gamers.",
+        "de": "Der Mauszeiger bewegt sich genau so weit wie die Maus, unabhängig vom Tempo – bei vielen Spielern beliebt."
+      },
+      "registry": [
+        {
+          "path": "HKCU\\Control Panel\\Mouse",
+          "name": "MouseSpeed",
+          "type": "String",
+          "apply": "0",
+          "undo": "1"
+        },
+        {
+          "path": "HKCU\\Control Panel\\Mouse",
+          "name": "MouseThreshold1",
+          "type": "String",
+          "apply": "0",
+          "undo": "6"
+        },
+        {
+          "path": "HKCU\\Control Panel\\Mouse",
+          "name": "MouseThreshold2",
+          "type": "String",
+          "apply": "0",
+          "undo": "10"
+        }
+      ]
+    },
+    {
+      "id": "long-paths",
+      "category": "system",
+      "source": "WPFToggleLongPaths",
+      "name": {
+        "en": "Allow long file paths",
+        "de": "Lange Dateipfade erlauben"
+      },
+      "description": {
+        "en": "Programs that support it can use paths longer than 260 characters.",
+        "de": "Programme, die es unterstützen, können Pfade mit mehr als 260 Zeichen verwenden."
+      },
+      "registry": [
+        {
+          "path": "HKLM\\SYSTEM\\CurrentControlSet\\Control\\FileSystem",
+          "name": "LongPathsEnabled",
+          "type": "DWord",
+          "apply": "1",
+          "undo": "0"
+        }
+      ]
+    },
+    {
+      "id": "detailed-bsod",
+      "category": "system",
+      "source": "WPFToggleDetailedBSoD",
+      "name": {
+        "en": "Detailed blue screen",
+        "de": "Ausführlicher Bluescreen"
+      },
+      "description": {
+        "en": "A blue screen shows technical details instead of a sad face.",
+        "de": "Ein Bluescreen zeigt technische Details statt eines traurigen Smileys."
+      },
+      "registry": [
+        {
+          "path": "HKLM\\SYSTEM\\CurrentControlSet\\Control\\CrashControl",
+          "name": "DisplayParameters",
+          "type": "DWord",
+          "apply": "1",
+          "undo": "0"
+        },
+        {
+          "path": "HKLM\\SYSTEM\\CurrentControlSet\\Control\\CrashControl",
+          "name": "DisableEmoticon",
+          "type": "DWord",
+          "apply": "1",
+          "undo": "0"
+        }
+      ]
+    },
+    {
+      "id": "verbose-logon",
+      "category": "system",
+      "source": "WPFToggleVerboseLogon",
+      "name": {
+        "en": "Detailed messages at startup",
+        "de": "Ausführliche Meldungen beim Start"
+      },
+      "description": {
+        "en": "Windows shows what it is doing while starting up and shutting down.",
+        "de": "Windows zeigt beim Hoch- und Herunterfahren an, was es gerade macht."
+      },
+      "registry": [
+        {
+          "path": "HKLM\\SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Policies\\System",
+          "name": "VerboseStatus",
+          "type": "DWord",
+          "apply": "1",
+          "undo": "0"
+        }
+      ]
+    }
+  ]
+}

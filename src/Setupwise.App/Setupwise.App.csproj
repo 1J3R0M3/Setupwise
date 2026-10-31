@@ -37,4 +37,9 @@
     <Resource Include="..\..\assets\setupwise-256.png" Link="Assets\setupwise-256.png" />
   </ItemGroup>
 
+  <!-- Windows tweaks (R-19) only in the installer/zip build: the Store package does not contain them -->
+  <ItemGroup Condition="'$(SetupwiseFlavor)' != 'Store'">
+    <EmbeddedResource Include="..\..\catalog\tweaks.json" Link="tweaks.json" LogicalName="Setupwise.tweaks.json" />
+  </ItemGroup>
+
 </Project>

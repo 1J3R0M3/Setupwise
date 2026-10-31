@@ -32,11 +32,13 @@ public class StorePackageTests
         Assert.False(store.CheckForAppUpdates);
         Assert.False(store.AutoUpdate);
         Assert.False(store.SelfElevation);
+        Assert.False(store.Tweaks);
 
         var standard = AppFeatures.For(BuildFlavor.Standard);
         Assert.True(standard.CheckForAppUpdates);
         Assert.True(standard.AutoUpdate);
         Assert.True(standard.SelfElevation);
+        Assert.True(standard.Tweaks);
     }
 
     [Fact]

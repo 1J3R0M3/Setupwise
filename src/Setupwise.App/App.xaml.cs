@@ -41,7 +41,8 @@ public partial class App : Application
             _http = CreateHttpClient();
             var icons = new IconLoader(new IconService(_http, AppPaths.IconCache), packages, store) { Enabled = settings.LoadIcons };
 
-            var viewModel = new MainViewModel(catalog, store, packages, icons, settings, _http);
+            var tweaks = AppPaths.Features.Tweaks ? TweakRunner.LoadCatalog() : null;
+            var viewModel = new MainViewModel(catalog, store, packages, icons, settings, _http, tweaks);
             var window = new MainWindow { DataContext = viewModel };
             MainWindow = window;
             ThemeService.Apply(window, settings.Theme);

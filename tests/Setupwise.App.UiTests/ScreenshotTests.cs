@@ -91,7 +91,10 @@ public class ScreenshotTests
         using var catalogStream = typeof(App).Assembly.GetManifestResourceStream("Setupwise.catalog.json")!;
         var catalog = CatalogLoader.Load(catalogStream).For(AppPaths.Flavor);
 
-        var vm = new MainViewModel(catalog, store, packages, icons, settings, http);
+        // Tweak states come from a fake registry (some on, some off): the test never reads the real PC's settings.
+        var tweaks = AppPaths.Features.Tweaks ? TweakRunner.LoadCatalog() : null;
+        static string? FakeRegistry(string path, string name) => name switch { "HideFileExt" => "0", "Hidden" or "TaskbarEndTask" => "1", _ => null };
+        var vm = new MainViewModel(catalog, store, packages, icons, settings, http, tweaks, FakeRegistry);
         var window = new MainWindow { DataContext = vm, Width = 1200, Height = 820, WindowBackdropType = WindowBackdropType.None };
         app.MainWindow = window;
         window.Show();

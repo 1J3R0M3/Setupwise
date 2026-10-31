@@ -104,7 +104,10 @@ public sealed partial class MainViewModel : ObservableObject, IPackageActions
     private NavItem? _pageNav; // navigation entry of the page that is shown
     private bool _navActionPending;
 
-    public MainViewModel(AppCatalog catalog, PackageStore store, IPackageManager? packages, IconLoader icons, AppSettings settings, HttpClient http)
+    /// <param name="tweaks">Windows tweaks (installer/zip build only); null hides the page.</param>
+    /// <param name="readRegistry">Reads registry values for the tweak states (the UI test passes a fake).</param>
+    public MainViewModel(AppCatalog catalog, PackageStore store, IPackageManager? packages, IconLoader icons, AppSettings settings, HttpClient http,
+        Core.Tweaks.TweakCatalog? tweaks = null, Func<string, string, string?>? readRegistry = null)
     {
         ArgumentNullException.ThrowIfNull(catalog);
         _store = store;
@@ -145,6 +148,13 @@ public sealed partial class MainViewModel : ObservableObject, IPackageActions
         NavItems.Add(_updatesNav);
         NavItems.Add(_skippedNav);
         NavItems.Add(_installedNav);
+        NavItem? tweaksNav = null;
+        if (tweaks is not null)
+        {
+            Tweaks = new TweaksViewModel(tweaks, readRegistry ?? TweakRunner.ReadRegistry, ShowInfo);
+            tweaksNav = new NavItem(Tweaks);
+            NavItems.Add(tweaksNav);
+        }
         UpdateIgnored();
 
         // Two foldable sections, so the list stays short with many categories (state is remembered).
@@ -189,6 +199,7 @@ public sealed partial class MainViewModel : ObservableObject, IPackageActions
             new("Selection", SymbolRegular.TaskListSquareLtr24, () => SelectedNav = _selectionNav),
             new("Install", SymbolRegular.ArrowDownload24, () => SelectedNav = _selectionNav),
             new("Updates", SymbolRegular.ArrowSync24, () => SelectedNav = _updatesNav),
+            .. tweaksNav is null ? Array.Empty<TourStep>() : [new TourStep("Tweaks", SymbolRegular.Options24, () => SelectedNav = tweaksNav)],
             new("Done", SymbolRegular.CheckmarkCircle24, () => SelectedNav = homeNav),
         ], () =>
         {
@@ -211,6 +222,9 @@ public sealed partial class MainViewModel : ObservableObject, IPackageActions
     public SearchViewModel Search { get; }
     public UpdatesViewModel Updates { get; }
     public IgnoredPackagesViewModel Skipped { get; }
+
+    /// <summary>Null in the Store build.</summary>
+    public TweaksViewModel? Tweaks { get; }
     public InstalledViewModel Installed { get; }
     public SettingsViewModel Settings { get; }
 

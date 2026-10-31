@@ -21,6 +21,7 @@
   <ItemGroup>
     <!-- The real catalog is tested so that broken pull requests fail CI -->
     <None Include="..\..\catalog\catalog.json" Link="catalog.json" CopyToOutputDirectory="PreserveNewest" />
+    <None Include="..\..\catalog\tweaks.json" Link="tweaks.json" CopyToOutputDirectory="PreserveNewest" />
   </ItemGroup>
 
 </Project>

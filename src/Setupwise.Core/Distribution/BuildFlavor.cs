@@ -17,12 +17,16 @@ public enum BuildFlavor
 /// Start Setupwise or helper commands with "Run as administrator". Off in the Store: an MSIX package needs the
 /// restricted capability <c>allowElevation</c> for that, and the Store only grants it under strict criteria.
 /// </param>
-public sealed record AppFeatures(bool CheckForAppUpdates, bool AutoUpdate, bool SelfElevation)
+/// <param name="Tweaks">
+/// Windows tweaks (R-19). Off in the Store: they change Windows settings in the registry and need administrator rights;
+/// the Store build does not even contain the tweak list.
+/// </param>
+public sealed record AppFeatures(bool CheckForAppUpdates, bool AutoUpdate, bool SelfElevation, bool Tweaks)
 {
     public static AppFeatures For(BuildFlavor flavor) => flavor switch
     {
-        BuildFlavor.Store => new AppFeatures(CheckForAppUpdates: false, AutoUpdate: false, SelfElevation: false),
-        _ => new AppFeatures(CheckForAppUpdates: true, AutoUpdate: true, SelfElevation: true),
+        BuildFlavor.Store => new AppFeatures(CheckForAppUpdates: false, AutoUpdate: false, SelfElevation: false, Tweaks: false),
+        _ => new AppFeatures(CheckForAppUpdates: true, AutoUpdate: true, SelfElevation: true, Tweaks: true),
     };
 }
 
