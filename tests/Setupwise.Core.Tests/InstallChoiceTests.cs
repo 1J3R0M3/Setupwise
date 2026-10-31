@@ -40,6 +40,17 @@ public class InstallChoiceTests
         Assert.Equal(skipDependencies, options.SkipDependencies);
         Assert.Equal(mode, options.Mode);
         Assert.Equal(Settings.Scope, options.Scope);
+        Assert.False(options.IgnoreSecurityHash);
+    }
+
+    [Fact]
+    public void Ignoring_the_hash_is_only_set_for_that_run()
+    {
+        var options = RetryVariants.Apply(Settings, RetryVariant.IgnoreSecurityHash);
+
+        Assert.True(options.IgnoreSecurityHash);
+        Assert.False(Settings.IgnoreSecurityHash);
+        Assert.Contains("--ignore-security-hash", Setupwise.Core.Winget.WingetArguments.Operation("Vendor.App", OperationKind.Upgrade, options));
     }
 
     [Fact]

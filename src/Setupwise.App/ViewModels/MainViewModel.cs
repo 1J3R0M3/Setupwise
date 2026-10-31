@@ -347,6 +347,8 @@ public sealed partial class MainViewModel : ObservableObject, IPackageActions
         await RunQueueAsync([item], i => RetryVariants.Apply(OptionsFor(i), variant));
     }
 
+    public bool CanUnlockHashOverride => AppPaths.Features.SelfElevation;
+
     /// <summary>The settings plus what the user chose for this app in its context menu.</summary>
     private InstallOptions OptionsFor(PackageItem item) => item.Choice?.ApplyTo(_settings.Install) ?? _settings.Install;
 

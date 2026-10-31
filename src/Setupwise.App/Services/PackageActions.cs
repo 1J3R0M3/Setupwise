@@ -15,8 +15,11 @@ public interface IPackageActions
     /// <summary>Installs or updates just this app right away, with the settings and the app's own choice.</summary>
     Task RunNowAsync(PackageItem item);
 
-    /// <summary>Runs this app again after it failed, with one extra option.</summary>
+    /// <summary>Runs this app right away with one extra option (after a failure, or an update without hash check).</summary>
     Task RetryAsync(PackageItem item, RetryVariant variant);
+
+    /// <summary>False in the Store build: it cannot elevate, so "unlock in winget" is not offered there.</summary>
+    bool CanUnlockHashOverride { get; }
 
     /// <summary>Remembers "Install for" / installation mode for this app (empty choice = back to the settings).</summary>
     void SetChoice(PackageItem item, AppInstallChoice choice);

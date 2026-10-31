@@ -76,6 +76,11 @@ public enum RetryVariant
     SkipDependencies,
     /// <summary>Show the installer's own wizard (--interactive), so its error message is visible.</summary>
     Interactive,
+    /// <summary>
+    /// Accept an installer whose hash does not match the catalog (--ignore-security-hash) – typical for updates
+    /// when the vendor replaced the installer before the catalog caught up. Needs InstallerHashOverride enabled.
+    /// </summary>
+    IgnoreSecurityHash,
 }
 
 public static class RetryVariants
@@ -88,6 +93,7 @@ public static class RetryVariants
             RetryVariant.Force => options with { Force = true },
             RetryVariant.SkipDependencies => options with { SkipDependencies = true },
             RetryVariant.Interactive => options with { Mode = InstallMode.Interactive },
+            RetryVariant.IgnoreSecurityHash => options with { IgnoreSecurityHash = true },
             _ => options,
         };
     }

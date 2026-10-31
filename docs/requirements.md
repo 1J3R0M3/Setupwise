@@ -319,3 +319,6 @@ security features (Defender, SmartScreen, UAC, Windows Update) stay out or need 
   of apps, the selection and the available updates as links), then the profiles.
 - **Welcome tour:** eight short steps that each show the page they talk about; starts by itself on the first start,
   *Skip* / Esc at any step, can be started again from the start page and *Settings → Advanced*.
+- **Update without hash check** in the context menu of an update (and under *Try again*): `--ignore-security-hash`
+  for that one run. winget only accepts it after `InstallerHashOverride` was enabled (admin); the tooltip says how.
+- **German texts reworked** (maintainer feedback: partly awkward, partly misleading).

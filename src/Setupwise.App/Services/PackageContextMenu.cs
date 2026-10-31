@@ -84,6 +84,20 @@ public static class PackageContextMenu
         now.Click += async (_, _) => await actions.RunNowAsync(item);
         menu.Items.Add(now);
 
+        // Updates often fail with a hash mismatch when the vendor replaced its installer before the catalog caught up.
+        if (update)
+        {
+            var noHash = new MenuItem
+            {
+                Header = Loc.T("Menu_UpdateIgnoreHash"),
+                Icon = new SymbolIcon(SymbolRegular.ShieldDismiss24),
+                IsEnabled = canRun,
+                ToolTip = Loc.T(actions.CanUnlockHashOverride ? "Menu_IgnoreHash_Tooltip" : "Menu_IgnoreHash_TooltipStore"),
+            };
+            noHash.Click += async (_, _) => await actions.RetryAsync(item, RetryVariant.IgnoreSecurityHash);
+            menu.Items.Add(noHash);
+        }
+
         // Options that are only needed when something went wrong.
         if (item.Status == PackageStatus.Failed)
         {
@@ -92,6 +106,7 @@ public static class PackageContextMenu
             AddRetry(retry, item, actions, "Menu_Retry_Interactive", RetryVariant.Interactive);
             AddRetry(retry, item, actions, "Menu_Retry_Force", RetryVariant.Force);
             AddRetry(retry, item, actions, "Menu_Retry_SkipDependencies", RetryVariant.SkipDependencies);
+            AddRetry(retry, item, actions, "Menu_Retry_IgnoreHash", RetryVariant.IgnoreSecurityHash);
             menu.Items.Add(retry);
         }
 

@@ -13,8 +13,11 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) and 
 - Context menu: *Install for* and *Installation mode* per app – kept for that app and shown on its card.
 - *Try again* for apps that failed: with the installer wizard, `--force` or `--skip-dependencies`.
 - *Skipped updates* in the navigation (only while there are some).
+- *Update without hash check* in the context menu of an update (`--ignore-security-hash`, needs the option unlocked in winget).
 
 ### Changed
+- German texts reworked: clearer wording, „…“ quotes, "Programm" instead of a mix with "App", misleading texts fixed
+  (e.g. "Keine Updates" for apps excluded from updates is now "Updates gesperrt").
 - New start page: welcome banner, "How it works" in three steps, quick start with profiles.
 - The one-off *Install with* submenu was replaced by the per-app options above.
 - The catalog now uses the categories of [WinUtil](https://github.com/ChrisTitusTech/winutil) by Chris Titus Tech
