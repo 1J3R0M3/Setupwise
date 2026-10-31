@@ -6,16 +6,21 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) and 
 ## [Unreleased]
 
 ### Added
+- **Windows tweaks** (installer/zip build only): 19 tweaks from WinUtil for privacy, Explorer, taskbar and input –
+  apply or undo with one click, state shown per tweak, optional restore point, one administrator prompt per run.
+- **Ignored packages** like UniGetUI: ignore a package (all updates) or skip only one version; one page lists
+  ignored, skipped and update-locked packages.
 - Microsoft Store package (MSIX, `scripts/Build-Msix.ps1`, CI artifact `Setupwise-msix-ci-N`). The Store build has
   no own update check and no *Run as administrator*, opens `.setupwise` files via the package manifest, and opens the
   redirected log folder. See `docs/store.md`.
 - Welcome tour on the first start (can be skipped, starts again from the start page or the settings).
 - Context menu: *Install for* and *Installation mode* per app – kept for that app and shown on its card.
 - *Try again* for apps that failed: with the installer wizard, `--force` or `--skip-dependencies`.
-- *Skipped updates* in the navigation (only while there are some).
 - *Update without hash check* in the context menu of an update (`--ignore-security-hash`, needs the option unlocked in winget).
 
 ### Changed
+- App icons load much faster: the catalog brings the vendor homepage, so Setupwise no longer runs `winget show` for
+  every app; more downloads run at once and the cache is read in the background.
 - German texts reworked: clearer wording, „…“ quotes, "Programm" instead of a mix with "App", misleading texts fixed
   (e.g. "Keine Updates" for apps excluded from updates is now "Updates gesperrt").
 - New start page: welcome banner, "How it works" in three steps, quick start with profiles.

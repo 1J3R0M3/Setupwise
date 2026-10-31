@@ -19,7 +19,7 @@ The privacy policies of those services apply to these requests:
 ## Data stored on your PC
 
 - Settings: `%APPDATA%\Setupwise\settings.json`
-- Logs and icon cache: `%LOCALAPPDATA%\Setupwise`
+- Logs and icon cache: `%LOCALAPPDATA%\Setupwise` (the logs also record which Windows tweaks were applied or undone)
 - Selections you save yourself (`*.setupwise` files)
 
 This data never leaves your PC. You can delete the folders at any time; the uninstaller keeps them so that a reinstall remembers your settings.
@@ -47,7 +47,7 @@ Für diese Anfragen gelten die Datenschutzerklärungen der jeweiligen Dienste:
 ### Auf deinem PC gespeicherte Daten
 
 - Einstellungen: `%APPDATA%\Setupwise\settings.json`
-- Protokolle und Icon-Cache: `%LOCALAPPDATA%\Setupwise`
+- Protokolle und Icon-Cache: `%LOCALAPPDATA%\Setupwise` (die Protokolle halten auch fest, welche Windows-Tweaks angewendet oder rückgängig gemacht wurden)
 - Auswahldateien, die du selbst speicherst (`*.setupwise`)
 
 Diese Daten verlassen deinen PC nie. Du kannst die Ordner jederzeit löschen; die Deinstallation behält sie, damit eine Neuinstallation deine Einstellungen kennt.

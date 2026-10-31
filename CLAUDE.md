@@ -5,8 +5,10 @@ Guidance for Claude Code (and other AI assistants) working in this repository.
 ## Project
 
 **Setupwise** – a Windows desktop app that sets up a new PC: users pick apps from a curated
-catalog or profiles, and Setupwise installs/updates them via `winget`. Target audience is
-normal users, not power users (that niche is covered by UniGetUI).
+catalog or profiles, and Setupwise installs/updates them via `winget`. The maintainer's direction: a mix of
+Chris Titus Tech's WinUtil (catalog categories, Windows tweaks) and UniGetUI (package management such as ignoring
+packages), but simple enough for normal users. Two builds from one branch: the installer/zip (full: tweaks, self-
+elevation, own update check) and the Microsoft Store MSIX (app installer only).
 
 - C# / .NET 10, WPF + [WPF-UI](https://github.com/lepoco/wpfui) 4.x (Fluent / Windows 11 look), MVVM with CommunityToolkit.Mvvm
 - License GPL-3.0-or-later, UI in English and German
@@ -38,7 +40,8 @@ If no .NET SDK is installed, install one into a temporary folder with
 | `src/Setupwise.App` | WPF app. `ViewModels/`, `Views/`, `Services/`, `Localization/Strings/{en,de}.json`, `Styles/Controls.xaml` |
 | `tests/Setupwise.Core.Tests` | xUnit v3. Also checks the real catalog, all translations and XAML conventions |
 | `tests/Setupwise.App.UiTests` | Opens the real main window with `FakePackageManager`, saves screenshots of every page (de/light, en/dark) to `artifacts/screenshots`, fails on exceptions **and on any binding error** |
-| `catalog/catalog.json` | Curated apps, categories, profiles (embedded into the app) |
+| `catalog/catalog.json` | Curated apps, categories, profiles, vendor homepages for icons (embedded into the app) |
+| `catalog/tweaks.json` | Windows tweaks (R-19), registry values with undo, from WinUtil; embedded only into the Standard build |
 | `docs/requirements.md` | Requirements and roadmap (requirements, not issues); keep the status column up to date |
 | `installer/Setupwise.iss` | Inno Setup script (UTF-8 **with BOM**, CRLF; shows `privacy.*.txt` before installing) |
 | `installer/msix` | Microsoft Store package (R-13): `AppxManifest.xml` template, `identity.json` (Partner Center identity), logos. Build flavour `Store` (`-p:SetupwiseFlavor=Store`, `AppFeatures` in Core) turns off the own update check and self-elevation. See `docs/store.md` |

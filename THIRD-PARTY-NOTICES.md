@@ -8,6 +8,8 @@ It includes material from the following projects.
 The app categories in [`catalog/catalog.json`](catalog/catalog.json) and the assignment of apps to them follow
 [WinUtil](https://github.com/ChrisTitusTech/winutil) by Chris Titus Tech (`config/applications.json`,
 taken from commit `b521c90ea510d2c0609a25319991f945461eab76`). The app descriptions are Setupwise's own.
+The Windows tweaks in [`catalog/tweaks.json`](catalog/tweaks.json) (installer/zip build only) take their registry
+values from WinUtil's `config/tweaks.json` (same commit); the texts are Setupwise's own.
 The license text is also kept in the header of `catalog.json`, which is embedded into the app.
 
 ```

@@ -18,6 +18,7 @@ metadata and read by `AppPaths.Flavor`; `AppFeatures` (in `Setupwise.Core/Distri
 | Auto-updater (R-14, not built yet) | planned | **off** (`AppFeatures.AutoUpdate`) |
 | *Restart as administrator* | yes | **hidden**, see [Elevation](#run-as-administrator-runas) |
 | *Unlock security options* (elevated `winget settings --enable`) | yes | **hidden**, same reason; installers that need admin rights still show their own UAC prompt |
+| Windows tweaks (R-19) | page *Windows tweaks* | **not included**: `tweaks.json` is not embedded, the page does not exist (`AppFeatures.Tweaks`) |
 | App catalog | all apps | without apps marked `"hideInStore": true` in `catalog.json` (tools that change Windows itself or replace other vendors' clients, e.g. MSEdgeRedirect, OFGB); `AppCatalog.For(flavor)` |
 | `.setupwise` file association | registry, by Inno Setup | package manifest (`uap3:FileTypeAssociation`) |
 | Settings, categories, logs, icon cache | `%APPDATA%` / `%LOCALAPPDATA%` | same paths, but redirected by Windows, see [AppData](#appdata-redirection) |

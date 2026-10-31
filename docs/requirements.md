@@ -27,7 +27,7 @@ Size: **S** = hours, **M** = a day or two, **L** = several days, needs design an
 | R-16 | [License: GPL or MIT](#r-16-license-gpl-or-mit) | – | decision needed |
 | R-17 | [Release policy](#r-17-release-policy) | – | proposal below |
 | R-18 | [Catalog based on WinUtil](#r-18-catalog-based-on-winutil) | M | done (unreleased) |
-| R-19 | [Windows tweaks (installer build only)](#r-19-windows-tweaks-installer-build-only) | L | open |
+| R-19 | [Windows tweaks (installer build only)](#r-19-windows-tweaks-installer-build-only) | L | step 1 built (registry tweaks), needs a test on Windows |
 | R-20 | [Usability pass](#r-20-usability-pass) | M | built (branch `feature/r20-usability`), needs a test on Windows |
 
 ---
@@ -301,6 +301,18 @@ security features (Defender, SmartScreen, UAC, Windows Update) stay out or need 
 `config/tweaks.json` (MIT) can be the source; credit it like the catalog.
 
 **Size:** L – needs real testing on Windows for each tweak and its undo.
+
+**Built (step 1):** `catalog/tweaks.json` with 19 tweaks taken from WinUtil (privacy, Explorer & taskbar, system &
+input) – registry values only, each with its undo value; nothing that weakens security, nothing that removes Windows
+parts. Logic in `Setupwise.Core/Tweaks` (loader + validation, state from the registry, PowerShell script that sets
+every value on its own and logs it, optional restore point, Explorer restart). Page *Windows tweaks* only in the
+Standard flavour (`AppFeatures.Tweaks`); `tweaks.json` is only embedded into that build, so the Store package does
+not contain the tweak list. Deviation from the proposal: no separate project – the engine is small, pure code in
+Core; what matters for the Store is that no tweak data and no page ship there. One UAC prompt per run (none if only
+HKCU values change). Known limit: when a standard user elevates with a different admin account, HKCU values land in
+that account (same as WinUtil).
+
+**Later:** services, scheduled tasks and script tweaks (e.g. disk cleanup, hibernation), presets ("recommended").
 
 ## R-20 Usability pass
 
