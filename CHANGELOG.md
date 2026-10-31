@@ -9,8 +9,14 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) and 
 - Microsoft Store package (MSIX, `scripts/Build-Msix.ps1`, CI artifact `Setupwise-msix-ci-N`). The Store build has
   no own update check and no *Run as administrator*, opens `.setupwise` files via the package manifest, and opens the
   redirected log folder. See `docs/store.md`.
+- Welcome tour on the first start (can be skipped, starts again from the start page or the settings).
+- Context menu: *Install for* and *Installation mode* per app – kept for that app and shown on its card.
+- *Try again* for apps that failed: with the installer wizard, `--force` or `--skip-dependencies`.
+- *Skipped updates* in the navigation (only while there are some).
 
 ### Changed
+- New start page: welcome banner, "How it works" in three steps, quick start with profiles.
+- The one-off *Install with* submenu was replaced by the per-app options above.
 - The catalog now uses the categories of [WinUtil](https://github.com/ChrisTitusTech/winutil) by Chris Titus Tech
   (Browsers, Communication, Development, Documents, Games, Microsoft tools, Multimedia, Pro tools, Self-hosted,
   Utilities) and includes its apps: 256 apps instead of 85, all with English and German descriptions. Credit in

@@ -21,12 +21,41 @@ public sealed partial class HomeViewModel : PageViewModel
         _store = store;
         _notify = notify;
         Profiles = catalog.Profiles.Select(p => new ProfileViewModel(p, store)).ToList();
+        CatalogText = Loc.F("Home_CatalogStats", catalog.Apps.Count, catalog.Categories.Count);
+        store.Updates.CollectionChanged += (_, _) => OnPropertyChanged(nameof(UpdatesText));
+        store.SelectionChanged += (_, _) => OnPropertyChanged(nameof(SelectionText));
     }
 
     public override string Title => Loc.T("Nav_Home");
     public override SymbolRegular Symbol => SymbolRegular.Home24;
 
     public IReadOnlyList<ProfileViewModel> Profiles { get; }
+
+    /// <summary>"256 apps in 10 categories".</summary>
+    public string CatalogText { get; }
+
+    public string UpdatesText => _store.Updates.Count switch
+    {
+        0 when !_store.InstalledStateKnown => Loc.T("Home_UpdatesUnknown"),
+        0 => Loc.T("Home_UpdatesNone"),
+        1 => Loc.T("Home_UpdatesOne"),
+        var n => Loc.F("Home_UpdatesMany", n),
+    };
+
+    public string SelectionText => _store.Selected.Count switch
+    {
+        0 => Loc.T("Home_SelectionNone"),
+        var n => Loc.F("Home_SelectionMany", n),
+    };
+
+    // Set by the main view model, which owns the navigation and the tour.
+    [ObservableProperty] public partial IRelayCommand? StartTourCommand { get; set; }
+    [ObservableProperty] public partial IRelayCommand? BrowseCommand { get; set; }
+    [ObservableProperty] public partial IRelayCommand? ShowSelectionCommand { get; set; }
+    [ObservableProperty] public partial IRelayCommand? ShowUpdatesCommand { get; set; }
+
+    /// <summary>Called after winget was asked, so "checking…" turns into the real update count.</summary>
+    public void RefreshUpdates() => OnPropertyChanged(nameof(UpdatesText));
 
     public override IEnumerable<PackageItem> VisiblePackages => Profiles.SelectMany(p => p.Apps);
 

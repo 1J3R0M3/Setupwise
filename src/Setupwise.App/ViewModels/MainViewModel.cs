@@ -148,7 +148,8 @@ public sealed partial class MainViewModel : ObservableObject, IPackageActions
 
         // Two foldable sections, so the list stays short with many categories (state is remembered).
         var catalogExpanded = !settings.CollapsedNavGroups.Contains(CatalogGroup);
-        NavItems.Add(NavItem.ForHeader(Loc.T("Nav_Categories"), CatalogGroup, catalogExpanded, ToggleNavGroup));
+        var catalogHeader = NavItem.ForHeader(Loc.T("Nav_Categories"), CatalogGroup, catalogExpanded, ToggleNavGroup);
+        NavItems.Add(catalogHeader);
         foreach (var category in catalog.Categories)
         {
             var page = new CategoryViewModel(category, store, catalog.AppsIn(category.Id).Select(a => store.GetOrCreate(a.Id, a.Name.Get(Loc.Instance.Culture))));
@@ -169,7 +170,39 @@ public sealed partial class MainViewModel : ObservableObject, IPackageActions
         SelectedNav = NavItems[0];
         OnSelectionChanged();
         PackageActions.Current = this;
+
+        // Each step shows the page it talks about.
+        var homeNav = NavItems[0];
+        var firstCategory = NavItems.FirstOrDefault(n => n.Page is CategoryViewModel);
+        void ShowCategory()
+        {
+            SetNavGroupExpanded(catalogHeader, true);
+            SelectedNav = firstCategory ?? homeNav;
+        }
+        Tour = new TourViewModel(
+        [
+            new("Welcome", SymbolRegular.HandWave24, () => SelectedNav = homeNav),
+            new("Profiles", SymbolRegular.Star24, () => SelectedNav = homeNav),
+            new("Categories", SymbolRegular.CheckboxChecked24, ShowCategory),
+            new("RightClick", SymbolRegular.CursorClick24, ShowCategory),
+            new("Selection", SymbolRegular.TaskListSquareLtr24, () => SelectedNav = _selectionNav),
+            new("Install", SymbolRegular.ArrowDownload24, () => SelectedNav = _selectionNav),
+            new("Updates", SymbolRegular.ArrowSync24, () => SelectedNav = _updatesNav),
+            new("Done", SymbolRegular.CheckmarkCircle24, () => SelectedNav = homeNav),
+        ], () =>
+        {
+            _settings.TourSeen = true;
+            _settings.Save();
+        });
+        Home.StartTourCommand = Tour.StartCommand;
+        Home.BrowseCommand = new RelayCommand(ShowCategory);
+        Home.ShowSelectionCommand = new RelayCommand(() => SelectedNav = _selectionNav);
+        Home.ShowUpdatesCommand = new RelayCommand(() => SelectedNav = _updatesNav);
+        Settings.StartTourCommand = Tour.StartCommand;
+        if (!settings.TourSeen) Tour.Start();
     }
+
+    public TourViewModel Tour { get; }
 
     public UserCategoriesService Categories => _categories;
     public HomeViewModel Home { get; }
@@ -494,6 +527,7 @@ public sealed partial class MainViewModel : ObservableObject, IPackageActions
             _hiddenUpdates = upgrades.Where(u => SkippedUpdates.IsSkipped(u, _settings.SkippedUpdates))
                 .ToDictionary(u => u.Id, u => u.AvailableVersion ?? string.Empty, StringComparer.OrdinalIgnoreCase);
             UpdateSkipped();
+            Home.RefreshUpdates();
             AppLog.Write($"{installed.Count} installed apps, {upgrades.Count} updates available ({upgrades.Count - shown.Count} skipped), {pinned.Count} excluded from updates");
             _icons.Request(_store.Updates);
             OnSelectionChanged();

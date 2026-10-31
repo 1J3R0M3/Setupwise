@@ -83,7 +83,7 @@ public class ScreenshotTests
         ApplicationThemeManager.Apply(theme, WindowBackdropType.None, true); // like ThemeService
 
         using var http = new HttpClient();
-        var settings = new AppSettings { LoadIcons = false, CheckForAppUpdates = false };
+        var settings = new AppSettings { LoadIcons = false, CheckForAppUpdates = false, TourSeen = true }; // tour: own screenshots below
         var store = new PackageStore();
         var packages = new FakePackageManager();
         var icons = new IconLoader(new IconService(http, Path.Combine(Path.GetTempPath(), "setupwise-ui-icons")), packages, store) { Enabled = false };
@@ -142,6 +142,19 @@ public class ScreenshotTests
         vm.SelectedNav = vm.NavItems[1];
         Pump();
         Save(window, $"{language}-{theme.ToString().ToLowerInvariant()}-zz-log-and-info", full: false);
+
+        // Welcome tour: first step and the right-click step.
+        vm.IsLogOpen = false;
+        vm.IsConsoleOpen = false;
+        vm.CloseInfoCommand.Execute(null);
+        vm.Tour.Start();
+        Pump();
+        Save(window, $"{language}-{theme.ToString().ToLowerInvariant()}-zt-tour-1", full: false);
+        for (var i = 0; i < 3; i++) vm.Tour.NextCommand.Execute(null);
+        Pump();
+        Save(window, $"{language}-{theme.ToString().ToLowerInvariant()}-zt-tour-4", full: false);
+        vm.Tour.CloseCommand.Execute(null);
+        Assert.True(settings.TourSeen);
 
         window.Close();
     }
