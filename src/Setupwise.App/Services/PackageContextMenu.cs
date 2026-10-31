@@ -126,18 +126,15 @@ public static class PackageContextMenu
             AddChoice(mode, item, actions, ModeName(value), choice.Mode == value, choice with { Mode = value });
         menu.Items.Add(mode);
 
-        if (item.IsInstalled)
+        if (item.IsInstalled || update) menu.Items.Add(new Separator());
+
+        // "Ignore package" below replaced the winget pin ("Exclude from updates") – it did the same for the user.
+        // Pins set earlier, or with winget itself, can still be lifted.
+        if (item.IsPinned)
         {
-            menu.Items.Add(new Separator());
-            var pin = new MenuItem
-            {
-                Header = Loc.T(item.IsPinned ? "Menu_Unpin" : "Menu_Pin"),
-                Icon = new SymbolIcon(item.IsPinned ? SymbolRegular.PinOff24 : SymbolRegular.Pin24),
-                IsEnabled = canRun,
-            };
-            var pinned = !item.IsPinned;
-            pin.Click += async (_, _) => await actions.SetPinnedAsync(item, pinned);
-            menu.Items.Add(pin);
+            var unpin = new MenuItem { Header = Loc.T("Menu_Unpin"), Icon = new SymbolIcon(SymbolRegular.PinOff24), IsEnabled = canRun };
+            unpin.Click += async (_, _) => await actions.SetPinnedAsync(item, false);
+            menu.Items.Add(unpin);
         }
 
         if (update)

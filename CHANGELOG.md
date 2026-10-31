@@ -25,6 +25,8 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) and 
   (e.g. "Keine Updates" for apps excluded from updates is now "Updates gesperrt").
 - New start page: welcome banner, "How it works" in three steps, quick start with profiles.
 - The one-off *Install with* submenu was replaced by the per-app options above.
+- *Exclude from updates* (winget pin) is gone from the context menu: *Ignore package* does the same for you. Pins set
+  earlier or with winget itself are shown under *Ignored packages* and can be lifted there.
 - The catalog now uses the categories of [WinUtil](https://github.com/ChrisTitusTech/winutil) by Chris Titus Tech
   (Browsers, Communication, Development, Documents, Games, Microsoft tools, Multimedia, Pro tools, Self-hosted,
   Utilities) and includes its apps: 256 apps instead of 85, all with English and German descriptions. Credit in
