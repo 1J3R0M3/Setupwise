@@ -65,3 +65,26 @@ jobs:
           if ($version -match '-') { $flags += '--prerelease' }
           gh release create '${{ github.ref_name }}' (Get-ChildItem artifacts/dist -File).FullName `
             --title "Setupwise $version" --notes-file release-notes.md @flags
+
+  # The MSIX is uploaded to Partner Center by hand and is not a release asset: it is unsigned until the Store signs
+  # it, so users could not install it from GitHub anyway.
+  msix:
+    name: Store package (MSIX)
+    needs: release
+    runs-on: windows-latest
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-dotnet@v6
+        with:
+          global-json-file: global.json
+      - name: Build MSIX
+        shell: pwsh
+        run: ./scripts/Build-Msix.ps1 -Version ('${{ github.ref_name }}'.TrimStart('v'))
+      - uses: actions/upload-artifact@v7
+        with:
+          name: Setupwise-msix-${{ github.ref_name }}
+          path: artifacts/msix/*.msix
+          if-no-files-found: error
+          retention-days: 90

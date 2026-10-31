@@ -438,7 +438,7 @@ public sealed partial class MainViewModel : ObservableObject, IPackageActions
         if (_packages is WingetCli cli)
         {
             Settings.WingetVersion = await cli.GetVersionAsync();
-            AppLog.Write($"Setupwise {AppPaths.AppVersionText}, winget {Settings.WingetVersion}, admin: {SystemActions.IsAdministrator}");
+            AppLog.Write($"Setupwise {AppPaths.AppVersionText} ({AppPaths.Flavor}, packaged: {PackageInfo.IsPackaged}), winget {Settings.WingetVersion}, admin: {SystemActions.IsAdministrator}");
         }
 
         await Task.WhenAll(RefreshInstalledAsync(), CheckForAppUpdateAsync());
@@ -494,7 +494,8 @@ public sealed partial class MainViewModel : ObservableObject, IPackageActions
 
     private async Task CheckForAppUpdateAsync()
     {
-        if (!_settings.CheckForAppUpdates) return;
+        // The Store build is updated by the Store; its own check stays off (R-13).
+        if (!AppPaths.Features.CheckForAppUpdates || !_settings.CheckForAppUpdates) return;
         var release = await new AppUpdateChecker(_http, AppPaths.GitHubRepository).FindNewerAsync(AppPaths.AppVersion, _settings.IncludePreReleases);
         if (release is null || Info is not null) return;
         var title = Loc.T(release.Version.IsPreRelease ? "AppUpdate_BetaTitle" : "AppUpdate_Title");

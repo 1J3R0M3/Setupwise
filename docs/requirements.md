@@ -21,7 +21,7 @@ Size: **S** = hours, **M** = a day or two, **L** = several days, needs design an
 | R-10 | [Detect apps that are still running during an update](#r-10-detect-apps-that-are-still-running-during-an-update) | M | step 1 done (0.3.0) |
 | R-11 | [One admin prompt per run (like UniGetUI)](#r-11-one-admin-prompt-per-run-like-unigetui) | L | open |
 | R-12 | [Optional Chocolatey support](#r-12-optional-chocolatey-support) | L | open |
-| R-13 | [Microsoft Store package](#r-13-microsoft-store-package) | L | open |
+| R-13 | [Microsoft Store package](#r-13-microsoft-store-package) | L | in progress: MSIX build ready for review, Partner Center open |
 | R-14 | [Optional auto-updater](#r-14-optional-auto-updater) | M | open |
 | R-15 | [Code signing](#r-15-code-signing) | – | decision needed |
 | R-16 | [License: GPL or MIT](#r-16-license-gpl-or-mit) | – | decision needed |
@@ -173,16 +173,28 @@ benefits from R-11. Effort L.
 
 **Wanted:** offer Setupwise in the Microsoft Store.
 
-**Proposal:** an **MSIX** package (Windows Application Packaging Project or single-project MSIX). Advantages: the
-Store signs MSIX packages for free (see R-15), updates come from the Store, registration is free for individual
-developers. Points to solve:
-- Separate build flavour `Store`: the own update check and auto-updater (R-14) are off there.
-- The file association for `.setupwise` moves to the package manifest.
-- *Run as administrator* from a packaged app: check whether `runas` works for the full-trust package or whether the
-  restricted capability `allowElevation` is needed (needs Store approval).
-- `%APPDATA%` writes of packaged apps are redirected to the package folder – settings survive, but a later switch
-  between the installer and the Store version does not migrate them automatically.
-- Store listing (screenshots, privacy policy URL – `PRIVACY.md` exists), age rating questionnaire.
+**Proposal:** an **MSIX** package. Advantages: the Store signs MSIX packages for free (see R-15), updates come from
+the Store, Partner Center registration is free. Details, verified facts and the maintainer checklist:
+[`docs/store.md`](store.md).
+
+**Step 1 – MSIX build (done on `feature/r13-store`, needs a test on Windows):**
+- Built by `scripts/Build-Msix.ps1` (hand-written manifest + `MakeAppx.exe`): single-project MSIX is WinUI-only, and a
+  `.wapproj` would break `dotnet build` on Linux. CI artifact `Setupwise-msix-ci-N`; `release.yml` builds
+  `Setupwise-msix-vX.Y.Z` (not a release asset – unsigned until the Store signs it).
+- Build flavour `Store` (`-p:SetupwiseFlavor=Store`, `AppFeatures` in Core): own update check and auto-updater (R-14)
+  off, their settings hidden.
+- `.setupwise` file association in the package manifest.
+- *Run as administrator:* Microsoft does not accept Store apps that need elevation for any part of their
+  functionality, and `allowElevation` (auto-elevation) is a restricted capability with strict approval. Whether a
+  plain `runas` works from the package is not documented. So the Store build offers no elevation of its own
+  (*Restart as administrator* and *Unlock security options* hidden); installers still ask via UAC themselves.
+- `%APPDATA%`: new files go to a private per-package location (removed on uninstall); files that already exist in the
+  real folder are read and changed there, so settings of an earlier installer version are picked up and shared.
+  *Open log folder* opens the redirection target.
+
+**Step 2 – Store submission (open, maintainer):** account, name reservation, listing, age rating, submission – see
+the checklist in `docs/store.md`. The Store only accepts versions ≥ 1.0.0 (first number must not be 0), so the first
+submission is 1.0.0.
 
 Also worth it and much smaller: submit Setupwise to **winget-pkgs** itself (`winget install Setupwise`), which also
 enables R-14 via winget.

@@ -4,6 +4,7 @@ using CommunityToolkit.Mvvm.Input;
 using Setupwise.App.Infrastructure;
 using Setupwise.App.Localization;
 using Setupwise.App.Services;
+using Setupwise.Core.Distribution;
 using Setupwise.Core.Packages;
 using Setupwise.Core.Winget;
 using Wpf.Ui.Controls;
@@ -169,8 +170,13 @@ public sealed partial class SettingsViewModel : PageViewModel
     public partial string? WingetVersion { get; set; }
 
     public bool IsAdministrator => SystemActions.IsAdministrator;
+
+    /// <summary>The Store build has no own update check and no "Run as administrator" (R-13).</summary>
+    public bool ShowAppUpdateSettings => AppPaths.Features.CheckForAppUpdates;
+    public bool ShowElevation => AppPaths.Features.SelfElevation;
     public string AdminText => IsAdministrator ? Loc.T("Settings_AdminActive") : Loc.T("Settings_AdminDesc");
-    public string VersionText => Loc.F("Settings_Version", AppPaths.AppVersionText);
+    public string VersionText => Loc.F("Settings_Version",
+        AppPaths.Flavor == BuildFlavor.Store ? $"{AppPaths.AppVersionText} (Microsoft Store)" : AppPaths.AppVersionText);
     public string WingetText => WingetVersion is null ? Loc.T("Settings_WingetMissing") : Loc.F("Settings_Winget", WingetVersion);
 
     partial void OnWingetVersionChanged(string? value) => OnPropertyChanged(nameof(WingetText));
@@ -246,7 +252,7 @@ public sealed partial class SettingsViewModel : PageViewModel
     private static void OpenLogs()
     {
         System.IO.Directory.CreateDirectory(AppPaths.Logs);
-        SystemActions.Open(AppPaths.Logs);
+        SystemActions.Open(PackageInfo.ForShell(AppPaths.Logs));
     }
 
     [RelayCommand]
