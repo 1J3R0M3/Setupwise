@@ -21,7 +21,7 @@ Size: **S** = hours, **M** = a day or two, **L** = several days, needs design an
 | R-10 | [Detect apps that are still running during an update](#r-10-detect-apps-that-are-still-running-during-an-update) | M | step 1 done (0.3.0) |
 | R-11 | [One admin prompt per run (like UniGetUI)](#r-11-one-admin-prompt-per-run-like-unigetui) | L | open |
 | R-12 | [Optional Chocolatey support](#r-12-optional-chocolatey-support) | L | open |
-| R-13 | [Microsoft Store package](#r-13-microsoft-store-package) | L | in progress: MSIX build ready for review, Partner Center open |
+| R-13 | [Microsoft Store package](#r-13-microsoft-store-package) | L | step 1 done (MSIX build), Store submission open |
 | R-14 | [Optional auto-updater](#r-14-optional-auto-updater) | M | open |
 | R-15 | [Code signing](#r-15-code-signing) | – | decision needed |
 | R-16 | [License: GPL or MIT](#r-16-license-gpl-or-mit) | – | decision needed |
@@ -177,7 +177,7 @@ benefits from R-11. Effort L.
 the Store, Partner Center registration is free. Details, verified facts and the maintainer checklist:
 [`docs/store.md`](store.md).
 
-**Step 1 – MSIX build (done on `feature/r13-store`, needs a test on Windows):**
+**Step 1 – MSIX build (done, tested on Windows):**
 - Built by `scripts/Build-Msix.ps1` (hand-written manifest + `MakeAppx.exe`): single-project MSIX is WinUI-only, and a
   `.wapproj` would break `dotnet build` on Linux. CI artifact `Setupwise-msix-ci-N`; `release.yml` builds
   `Setupwise-msix-vX.Y.Z` (not a release asset – unsigned until the Store signs it).
