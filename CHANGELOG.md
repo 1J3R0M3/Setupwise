@@ -5,11 +5,16 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) and 
 
 ## [Unreleased]
 
+## [1.0.0] - 2026-10-31
+
+Setupwise 1.0: the app catalog of WinUtil, Windows tweaks, ignored packages like UniGetUI and a new start page with a
+welcome tour. A Microsoft Store version (app installer without the tweaks) follows separately.
+
 ### Added
 - **Windows tweaks** (installer/zip build only): 19 tweaks from WinUtil for privacy, Explorer, taskbar and input –
   apply or undo with one click, state shown per tweak, optional restore point, one administrator prompt per run.
 - **Ignored packages** like UniGetUI: ignore a package (all updates) or skip only one version; one page lists
-  ignored, skipped and update-locked packages.
+  ignored packages, skipped versions and packages pinned in winget.
 - Microsoft Store package (MSIX, `scripts/Build-Msix.ps1`, CI artifact `Setupwise-msix-ci-N`). The Store build has
   no own update check and no *Run as administrator*, opens `.setupwise` files via the package manifest, and opens the
   redirected log folder. See `docs/store.md`.
@@ -22,7 +27,7 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) and 
 - App icons load much faster: the catalog brings the vendor homepage, so Setupwise no longer runs `winget show` for
   every app; more downloads run at once and the cache is read in the background.
 - German texts reworked: clearer wording, „…“ quotes, "Programm" instead of a mix with "App", misleading texts fixed
-  (e.g. "Keine Updates" for apps excluded from updates is now "Updates gesperrt").
+  (e.g. "Keine Updates" for packages pinned in winget is now "In winget gesperrt").
 - New start page: welcome banner, "How it works" in three steps, quick start with profiles.
 - The one-off *Install with* submenu was replaced by the per-app options above.
 - *Exclude from updates* (winget pin) is gone from the context menu: *Ignore package* does the same for you. Pins set
