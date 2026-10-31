@@ -10,15 +10,15 @@ Size: **S** = hours, **M** = a day or two, **L** = several days, needs design an
 | ID | Requirement | Size | Status |
 |---|---|---|---|
 | R-01 | [Plan the work in a GitHub Project](#r-01-plan-the-work-in-a-github-project) | S | done |
-| R-02 | [Bug: "New category" dialog opens a second time](#r-02-bug-new-category-dialog-opens-a-second-time) | S | done (unreleased) |
-| R-03 | [Alpha/beta releases](#r-03-alphabeta-releases) | S | done (unreleased) |
-| R-04 | [Install from the context menu, with options](#r-04-install-from-the-context-menu-with-options) | M | done (unreleased) |
-| R-05 | [Console for own winget commands](#r-05-console-for-own-winget-commands) | M | done (unreleased) |
-| R-06 | [Page "Installed apps"](#r-06-page-installed-apps) | M | done (unreleased) |
-| R-07 | [Exclude apps from updates](#r-07-exclude-apps-from-updates) | M | done (unreleased) |
+| R-02 | [Bug: "New category" dialog opens a second time](#r-02-bug-new-category-dialog-opens-a-second-time) | S | done (0.3.0) |
+| R-03 | [Alpha/beta releases](#r-03-alphabeta-releases) | S | done (0.3.0) |
+| R-04 | [Install from the context menu, with options](#r-04-install-from-the-context-menu-with-options) | M | done (0.3.0) |
+| R-05 | [Console for own winget commands](#r-05-console-for-own-winget-commands) | M | done (0.3.0) |
+| R-06 | [Page "Installed apps"](#r-06-page-installed-apps) | M | done (0.3.0) |
+| R-07 | [Exclude apps from updates](#r-07-exclude-apps-from-updates) | M | done (0.3.0) |
 | R-08 | [German translation polish](#r-08-german-translation-polish) | S | first pass done, more examples welcome |
-| R-09 | [More curated categories (Ninite-like)](#r-09-more-curated-categories-ninite-like) | M | done (unreleased) |
-| R-10 | [Detect apps that are still running during an update](#r-10-detect-apps-that-are-still-running-during-an-update) | M | step 1 done (unreleased) |
+| R-09 | [More curated categories (Ninite-like)](#r-09-more-curated-categories-ninite-like) | M | done (0.3.0) |
+| R-10 | [Detect apps that are still running during an update](#r-10-detect-apps-that-are-still-running-during-an-update) | M | step 1 done (0.3.0) |
 | R-11 | [One admin prompt per run (like UniGetUI)](#r-11-one-admin-prompt-per-run-like-unigetui) | L | open |
 | R-12 | [Optional Chocolatey support](#r-12-optional-chocolatey-support) | L | open |
 | R-13 | [Microsoft Store package](#r-13-microsoft-store-package) | L | open |

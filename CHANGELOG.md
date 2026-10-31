@@ -5,6 +5,8 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) and 
 
 ## [Unreleased]
 
+## [0.3.0] - 2026-10-31
+
 ### Added
 - Page "Installed" with every app winget knows as installed.
 - Right-click an app: *Install now* / *Update now*, and *Install with* one-off options (installer wizard,
@@ -19,6 +21,7 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) and 
 
 ### Changed
 - Navigation: "Categories" and "My categories" are sections that can be folded in; the state is remembered.
+- The navigation scrolls to the selected page.
 - App names in the catalog can be translated (e.g. "Mozilla Firefox (Deutsch)").
 - Polished German texts.
 
