@@ -2,5 +2,5 @@
   "comment": "Package identity for the MSIX build. Placeholders until the name is reserved in Partner Center; then copy Package/Identity/Name, Package/Identity/Publisher and Package/Properties/PublisherDisplayName from 'Product identity' (see docs/store.md).",
   "name": "Setupwise.Preview",
   "publisher": "CN=Setupwise Preview",
-  "publisherDisplayName": "Setupwise contributors"
+  "publisherDisplayName": "1J3R0M3"
 }

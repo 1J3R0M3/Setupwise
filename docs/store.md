@@ -150,15 +150,16 @@ These steps need the maintainer's account and cannot be done by Claude.
    individual and company accounts. Start at <https://storedeveloper.microsoft.com> (only this entry point uses the
    free flow).
    - **Individual:** Microsoft account + identity check with a government ID and a selfie. Microsoft: *"Choose an
-     Individual account if you want to publish apps under your own name."* → this likely conflicts with the project
-     rule not to publish the real name. Check which publisher name the Store would show **before** creating the
-     account – the account type cannot be changed later.
+     Individual account if you want to publish apps under your own name."* In practice (2026-10-31) the account's
+     publisher display name is **`1J3R0M3`**, not the real name – Partner Center checks that the package's
+     `PublisherDisplayName` matches it exactly.
    - **Company:** needs a registered business (D-U-N-S number or official documents) and a work e-mail address on the
      company's domain.
 2. **Reserve the name** "Setupwise" in Partner Center (Apps and games → New product → MSIX or PWA app).
 3. **Send the product identity to Claude:** Product management → Product identity → `Package/Identity/Name`,
    `Package/Identity/Publisher` (`CN=…`) and `Package/Properties/PublisherDisplayName`. They go into
-   `installer/msix/identity.json` (they are public in every Store package).
+   `installer/msix/identity.json` (they are public in every Store package). A package built with other values is
+   rejected on upload (*"PublisherDisplayName … does not match your publisher display name"*).
 4. **Release 1.0.0** (see [Package version](#package-version)); the `release.yml` run for `v1.0.0` produces the
    artifact `Setupwise-msix-v1.0.0`. Run the Windows App Certification Kit on it.
 5. **Start the submission** and fill in:
@@ -167,14 +168,17 @@ These steps need the maintainer's account and cannot be done by Claude.
      `https://github.com/1J3R0M3/Setupwise/blob/main/PRIVACY.md`; website `https://github.com/1J3R0M3/Setupwise`.
    - *Age ratings:* answer the IARC questionnaire (no user content, no purchases, no ads; the app downloads other
      apps from winget only on the user's request).
-   - *Packages:* upload the `.msix`.
+   - *Packages:* upload the `.msix`. The warning *"restricted capabilities require approval: runFullTrust"* is
+     expected; the justification goes into *Submission options*.
    - *Store listings* (English and German): description that **starts** with the winget/App Installer requirement,
      at least 1 screenshot (4+ recommended, PNG, desktop 1366 × 768 or larger, max. 10) – the CI screenshots
      (`screenshots-store-N`, 1:1 size) are a starting point; a 300 × 300 app tile icon is strongly recommended
      (`assets/setupwise-512.png` scaled).
-   - *Submission options → Restricted capabilities:* explain `runFullTrust` (classic WPF desktop app that starts
-     winget). *Notes for certification:* Setupwise installs the apps the user selects via winget, bundles no
-     software, needs no elevation; how to test (pick an app, *Install*).
+   - *Submission options → Restricted capabilities:* explain `runFullTrust`, e.g. *"Setupwise is a classic WPF
+     desktop app (.NET) packaged as a full-trust desktop app. It needs runFullTrust to run as a desktop process and to
+     start winget (Windows Package Manager), which installs and updates the apps the user selects."*
+     *Notes for certification:* Setupwise installs the apps the user selects via winget, bundles no software, needs
+     no elevation; how to test (pick an app, *Install*).
 6. **Submit for certification** and tell Claude the result. When the app is live: R-13 → done, roadmap board → *Done*.
 
 ## Only testable on Windows or in Partner Center
