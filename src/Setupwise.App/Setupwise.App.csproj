@@ -14,7 +14,13 @@
     <!-- CA1515: WPF needs public types for XAML; CA2007: UI code must resume on the UI thread;
          CA1822: properties used by data binding must be instance members -->
     <NoWarn>$(NoWarn);CA1515;CA2007;CA1822</NoWarn>
+    <!-- Distribution flavour: "Standard" (installer/zip from GitHub) or "Store" (MSIX, see installer/msix) -->
+    <SetupwiseFlavor Condition="'$(SetupwiseFlavor)' == ''">Standard</SetupwiseFlavor>
   </PropertyGroup>
+
+  <ItemGroup>
+    <AssemblyMetadata Include="SetupwiseFlavor" Value="$(SetupwiseFlavor)" />
+  </ItemGroup>
 
   <ItemGroup>
     <PackageReference Include="WPF-UI" Version="4.3.0" />

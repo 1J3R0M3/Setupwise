@@ -60,6 +60,18 @@ jobs:
           path: artifacts/screenshots/*
           if-no-files-found: warn
           retention-days: 30
+      - name: Render every page (Store build)
+        shell: pwsh
+        run: |
+          Remove-Item artifacts/screenshots -Recurse -Force -ErrorAction SilentlyContinue
+          dotnet test --project tests/Setupwise.App.UiTests -c Release -p:SetupwiseFlavor=Store
+      - uses: actions/upload-artifact@v7
+        if: always()
+        with:
+          name: screenshots-store-${{ github.run_number }}
+          path: artifacts/screenshots/*
+          if-no-files-found: warn
+          retention-days: 30
 
   package:
     name: Windows installer
@@ -79,5 +91,29 @@ jobs:
         with:
           name: Setupwise-ci-${{ github.run_number }}
           path: artifacts/dist/*
+          if-no-files-found: error
+          retention-days: 14
+
+  msix:
+    name: Store package (MSIX)
+    needs: test
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-dotnet@v6
+        with:
+          global-json-file: global.json
+      - name: Build MSIX
+        shell: pwsh
+        run: |
+          $base = (dotnet msbuild src/Setupwise.App/Setupwise.App.csproj -getProperty:VersionPrefix).Trim()
+          # Revision = run number, so a test install can be updated in place (the Store needs 0 there)
+          ./scripts/Build-Msix.ps1 -Version "$base-ci.${{ github.run_number }}" -Revision (${{ github.run_number }} % 65536)
+      - uses: actions/upload-artifact@v7
+        with:
+          name: Setupwise-msix-ci-${{ github.run_number }}
+          path: |
+            artifacts/msix/*.msix
+            artifacts/msix/layout/
           if-no-files-found: error
           retention-days: 14

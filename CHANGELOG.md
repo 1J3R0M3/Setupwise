@@ -5,6 +5,11 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) and 
 
 ## [Unreleased]
 
+### Added
+- Microsoft Store package (MSIX, `scripts/Build-Msix.ps1`, CI artifact `Setupwise-msix-ci-N`). The Store build has
+  no own update check and no *Run as administrator*, opens `.setupwise` files via the package manifest, and opens the
+  redirected log folder. See `docs/store.md`.
+
 ## [0.3.0] - 2026-10-31
 
 ### Added

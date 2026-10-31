@@ -22,6 +22,7 @@ dotnet test --project tests/Setupwise.App.UiTests    # Windows only: renders eve
 dotnet run --project src/Setupwise.App               # Windows only
 pwsh ./scripts/Build-Release.ps1 [-SkipInstaller]    # artifacts/dist (installer needs Inno Setup)
 pwsh ./scripts/Test-CatalogIds.ps1                   # checks catalog ids against microsoft/winget-pkgs (set GITHUB_TOKEN)
+pwsh ./scripts/Build-Msix.ps1                        # Windows only: Store package (MSIX) into artifacts/msix, needs the Windows SDK
 ```
 
 The WPF app **builds** on Linux thanks to `EnableWindowsTargeting`, but cannot run there.
@@ -40,7 +41,8 @@ If no .NET SDK is installed, install one into a temporary folder with
 | `catalog/catalog.json` | Curated apps, categories, profiles (embedded into the app) |
 | `docs/requirements.md` | Requirements and roadmap (requirements, not issues); keep the status column up to date |
 | `installer/Setupwise.iss` | Inno Setup script (UTF-8 **with BOM**, CRLF; shows `privacy.*.txt` before installing) |
-| `.github/workflows` | `ci.yml` (build/test on Linux, catalog id check, UI screenshots + installer on Windows), `release.yml` (tag `v*.*.*`) |
+| `installer/msix` | Microsoft Store package (R-13): `AppxManifest.xml` template, `identity.json` (Partner Center identity), logos. Build flavour `Store` (`-p:SetupwiseFlavor=Store`, `AppFeatures` in Core) turns off the own update check and self-elevation. See `docs/store.md` |
+| `.github/workflows` | `ci.yml` (build/test on Linux, catalog id check, UI screenshots of the Standard and Store build, installer and MSIX on Windows), `release.yml` (tag `v*.*.*`; MSIX only as workflow artifact) |
 
 ## Conventions
 
@@ -58,6 +60,7 @@ If no .NET SDK is installed, install one into a temporary folder with
 - **winget facts must be verified, not recalled**: option names against the official docs
   (`MicrosoftDocs/windows-dev-docs` → `hub/package-manager/winget/*.md`), exit codes against
   `microsoft/winget-cli` → `doc/windows/package-manager/winget/returnCodes.md`. (A wrong exit code from memory slipped in once.)
+  The same goes for MSIX and Microsoft Store facts: check learn.microsoft.com and list the source in `docs/store.md`.
 - Tests and the UI test must not touch the real user profile: `SETUPWISE_DATA_DIR` overrides all data folders.
 - The UI test must not create the real `App` – WPF would run `App.OnStartup` (real settings, real winget).
 

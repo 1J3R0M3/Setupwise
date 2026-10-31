@@ -1,5 +1,6 @@
 using System.IO;
 using System.Reflection;
+using Setupwise.Core.Distribution;
 using Setupwise.Core.Updates;
 
 namespace Setupwise.App.Infrastructure;
@@ -32,6 +33,14 @@ public static class AppPaths
     public static AppVersion AppVersion { get; } = ReadVersion();
 
     public static string AppVersionText => AppVersion.ToString();
+
+    /// <summary>Distribution flavour of this build (Standard, or Store for the MSIX package).</summary>
+    public static BuildFlavor Flavor { get; } = BuildFlavors.Parse(
+        typeof(AppPaths).Assembly.GetCustomAttributes<AssemblyMetadataAttribute>()
+            .FirstOrDefault(a => a.Key == BuildFlavors.MetadataKey)?.Value);
+
+    /// <summary>Features that depend on the flavour, e.g. no own update check in the Store build.</summary>
+    public static AppFeatures Features { get; } = AppFeatures.For(Flavor);
 
     private static AppVersion ReadVersion()
     {

@@ -153,7 +153,8 @@
         </ui:CardControl.Header>
         <ui:ToggleSwitch IsChecked="{Binding IgnoreLocalArchiveMalwareScan}" />
       </ui:CardControl>
-      <ui:CardControl Style="{StaticResource SettingRow}" Icon="{ui:SymbolIcon LockOpen24}">
+      <ui:CardControl Style="{StaticResource SettingRow}" Icon="{ui:SymbolIcon LockOpen24}"
+                      Visibility="{Binding ShowElevation, Converter={StaticResource BoolToVisibility}}">
         <ui:CardControl.Header>
           <StackPanel>
             <TextBlock Text="{loc:Tr Settings_Unlock}" />
@@ -177,7 +178,9 @@
           <ui:ToggleSwitch IsChecked="{Binding LoadIcons}" />
         </StackPanel>
       </ui:CardControl>
-      <ui:CardControl Style="{StaticResource SettingRow}" Icon="{ui:SymbolIcon ArrowSync24}">
+      <!-- The Store build is updated by the Store (R-13) -->
+      <ui:CardControl Style="{StaticResource SettingRow}" Icon="{ui:SymbolIcon ArrowSync24}"
+                      Visibility="{Binding ShowAppUpdateSettings, Converter={StaticResource BoolToVisibility}}">
         <ui:CardControl.Header>
           <StackPanel>
             <TextBlock Text="{loc:Tr Settings_AppUpdates}" />
@@ -186,7 +189,8 @@
         </ui:CardControl.Header>
         <ui:ToggleSwitch IsChecked="{Binding CheckForAppUpdates}" />
       </ui:CardControl>
-      <ui:CardControl Style="{StaticResource SettingRow}" Icon="{ui:SymbolIcon Beaker24}">
+      <ui:CardControl Style="{StaticResource SettingRow}" Icon="{ui:SymbolIcon Beaker24}"
+                      Visibility="{Binding ShowAppUpdateSettings, Converter={StaticResource BoolToVisibility}}">
         <ui:CardControl.Header>
           <StackPanel>
             <TextBlock Text="{loc:Tr Settings_PreReleases}" />
@@ -198,7 +202,8 @@
 
       <!-- Advanced -->
       <TextBlock Text="{loc:Tr Settings_Advanced}" Style="{StaticResource SectionHeader}" />
-      <ui:CardControl Style="{StaticResource SettingRow}" Icon="{ui:SymbolIcon Shield24}">
+      <ui:CardControl Style="{StaticResource SettingRow}" Icon="{ui:SymbolIcon Shield24}"
+                      Visibility="{Binding ShowElevation, Converter={StaticResource BoolToVisibility}}">
         <ui:CardControl.Header>
           <StackPanel>
             <TextBlock Text="{loc:Tr Settings_Admin}" />

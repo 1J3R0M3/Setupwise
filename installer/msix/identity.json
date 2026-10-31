@@ -1,0 +1,6 @@
+{
+  "comment": "Package identity for the MSIX build, from Partner Center: Product management -> Product identity (see docs/store.md). Partner Center rejects packages whose values differ.",
+  "name": "1J3R0M3.Setupwise",
+  "publisher": "CN=DA341E14-0D55-4F79-AE19-763C3E8DD1B5",
+  "publisherDisplayName": "1J3R0M3"
+}
