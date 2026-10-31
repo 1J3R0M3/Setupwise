@@ -55,6 +55,9 @@ public sealed class CatalogApp
     public required string Category { get; init; }
     public LocalizedText? Description { get; init; }
 
+    /// <summary>Vendor homepage for the icon. Saves a slow "winget show" per app; without it winget is asked.</summary>
+    public Uri? Homepage { get; init; }
+
     /// <summary>Leave the app out of the Microsoft Store build, e.g. tools that change Windows itself.</summary>
     public bool HideInStore { get; init; }
 }

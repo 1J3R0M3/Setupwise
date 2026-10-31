@@ -117,6 +117,7 @@ public sealed partial class MainViewModel : ObservableObject, IPackageActions
         {
             var item = store.GetOrCreate(app.Id, app.Name.Get(Loc.Instance.Culture));
             item.Description = app.Description?.Get(Loc.Instance.Culture);
+            item.Homepage = app.Homepage;
         }
         foreach (var item in store.All) ApplyChoice(item);
         store.ItemCreated += (_, item) => ApplyChoice(item);
@@ -130,7 +131,7 @@ public sealed partial class MainViewModel : ObservableObject, IPackageActions
         Selection = new SelectionViewModel(store, _categories);
         Search = new SearchViewModel(packages, store, icons);
         Updates = new UpdatesViewModel(store, RefreshInstalledAsync);
-        Skipped = new SkippedUpdatesViewModel(store, ResetSkippedUpdatesAsync);
+        Skipped = new IgnoredPackagesViewModel(store, ResetSkippedUpdatesAsync);
         Installed = new InstalledViewModel(store, RefreshInstalledAsync);
         Settings = new SettingsViewModel(settings, icons, (packages as WingetCli)?.ExecutablePath, ShowInfo, ResetSkippedUpdatesAsync);
 
@@ -144,7 +145,7 @@ public sealed partial class MainViewModel : ObservableObject, IPackageActions
         NavItems.Add(_updatesNav);
         NavItems.Add(_skippedNav);
         NavItems.Add(_installedNav);
-        UpdateSkipped();
+        UpdateIgnored();
 
         // Two foldable sections, so the list stays short with many categories (state is remembered).
         var catalogExpanded = !settings.CollapsedNavGroups.Contains(CatalogGroup);
@@ -209,7 +210,7 @@ public sealed partial class MainViewModel : ObservableObject, IPackageActions
     public SelectionViewModel Selection { get; }
     public SearchViewModel Search { get; }
     public UpdatesViewModel Updates { get; }
-    public SkippedUpdatesViewModel Skipped { get; }
+    public IgnoredPackagesViewModel Skipped { get; }
     public InstalledViewModel Installed { get; }
     public SettingsViewModel Settings { get; }
 
@@ -526,9 +527,9 @@ public sealed partial class MainViewModel : ObservableObject, IPackageActions
             var shown = SkippedUpdates.Remove(upgrades, _settings.SkippedUpdates);
             _store.ApplyInstalled(installed, shown, pinned);
             _updatesNav.BadgeCount = _store.Updates.Count;
-            _hiddenUpdates = upgrades.Where(u => SkippedUpdates.IsSkipped(u, _settings.SkippedUpdates))
-                .ToDictionary(u => u.Id, u => u.AvailableVersion ?? string.Empty, StringComparer.OrdinalIgnoreCase);
-            UpdateSkipped();
+            _hiddenUpdates.Clear();
+            _hiddenUpdates.UnionWith(upgrades.Where(u => SkippedUpdates.IsSkipped(u, _settings.SkippedUpdates)).Select(u => u.Id));
+            UpdateIgnored();
             Home.RefreshUpdates();
             AppLog.Write($"{installed.Count} installed apps, {upgrades.Count} updates available ({upgrades.Count - shown.Count} skipped), {pinned.Count} excluded from updates");
             _icons.Request(_store.Updates);
@@ -593,6 +594,7 @@ public sealed partial class MainViewModel : ObservableObject, IPackageActions
             }
 
             item.IsPinned = pinned;
+            UpdateIgnored();
             if (pinned)
             {
                 if (item.HasUpdate) item.IsSelected = false;
@@ -613,62 +615,89 @@ public sealed partial class MainViewModel : ObservableObject, IPackageActions
         }
     }
 
+    /// <summary>"Skip version X": hides exactly this update; a newer version shows up again.</summary>
     public void SkipUpdate(PackageItem item)
     {
         ArgumentNullException.ThrowIfNull(item);
         if (!item.HasUpdate || item.AvailableVersion is not { } version) return;
-
-        _settings.SkippedUpdates[item.Id] = version;
-        _settings.Save();
-        AppLog.Write($"Skipping version {version} of {item.Name} ({item.Id})");
-        item.IsSelected = false;
-        _store.HideUpdate(item);
-        _updatesNav.BadgeCount = _store.Updates.Count;
-        _hiddenUpdates[item.Id] = version;
-        UpdateSkipped();
-        OnSelectionChanged();
-        Settings.RefreshSkippedUpdates();
+        Ignore(item, version);
         ShowInfo(InfoMessage.Info(Loc.T("Skip_DoneTitle"), Loc.F("Skip_Done", item.Name, version)));
     }
 
-    /// <summary>Shows all skipped updates again (Settings).</summary>
+    /// <summary>"Ignore package" (like UniGetUI): no updates of this package are shown until the user undoes it.</summary>
+    public void IgnorePackage(PackageItem item)
+    {
+        ArgumentNullException.ThrowIfNull(item);
+        Ignore(item, SkippedUpdates.AllVersions);
+        ShowInfo(InfoMessage.Info(Loc.T("Ignore_DoneTitle"), Loc.F("Ignore_Done", item.Name)));
+    }
+
+    private void Ignore(PackageItem item, string version)
+    {
+        _settings.SkippedUpdates[item.Id] = version;
+        _settings.Save();
+        AppLog.Write(version == SkippedUpdates.AllVersions
+            ? $"Ignoring all updates of {item.Name} ({item.Id})"
+            : $"Skipping version {version} of {item.Name} ({item.Id})");
+        if (item.HasUpdate)
+        {
+            item.IsSelected = false;
+            _store.HideUpdate(item);
+            _hiddenUpdates.Add(item.Id);
+        }
+        _updatesNav.BadgeCount = _store.Updates.Count;
+        UpdateIgnored();
+        OnSelectionChanged();
+        Settings.RefreshSkippedUpdates();
+    }
+
+    /// <summary>Stops ignoring all packages and skipping versions (not the winget pins).</summary>
     public async Task ResetSkippedUpdatesAsync()
     {
         _settings.SkippedUpdates.Clear();
         _settings.Save();
         _hiddenUpdates.Clear();
-        UpdateSkipped();
+        UpdateIgnored();
         Settings.RefreshSkippedUpdates();
-        if (SelectedNav == _skippedNav) SelectedNav = _updatesNav;
+        if (SelectedNav == _skippedNav && !_skippedNav.IsVisible) SelectedNav = _updatesNav;
         await RefreshInstalledAsync();
     }
 
-    /// <summary>Shows the skipped update of this app again (context menu on the "Skipped updates" page).</summary>
+    /// <summary>Stops ignoring this package / skipping its version (context menu).</summary>
     public async Task UnskipUpdateAsync(PackageItem item)
     {
         ArgumentNullException.ThrowIfNull(item);
         _settings.SkippedUpdates.Remove(item.Id);
         _settings.Save();
         _hiddenUpdates.Remove(item.Id);
-        UpdateSkipped();
+        UpdateIgnored();
         Settings.RefreshSkippedUpdates();
-        if (SelectedNav == _skippedNav && _hiddenUpdates.Count == 0) SelectedNav = _updatesNav;
+        if (SelectedNav == _skippedNav && !_skippedNav.IsVisible) SelectedNav = _updatesNav;
         await RefreshInstalledAsync();
     }
 
-    public bool IsUpdateSkipped(PackageItem item) => item is not null && _hiddenUpdates.ContainsKey(item.Id);
+    public bool IsUpdateSkipped(PackageItem item) => item?.SkippedVersion is not null;
 
-    /// <summary>Updates hidden by "Skip this version" right now: package id → version. Until winget was asked, the settings.</summary>
-    private Dictionary<string, string> _hiddenUpdates = new(StringComparer.OrdinalIgnoreCase);
+    /// <summary>Ids whose available update is hidden right now by a skipped version (known after asking winget).</summary>
+    private readonly HashSet<string> _hiddenUpdates = new(StringComparer.OrdinalIgnoreCase);
 
-    private void UpdateSkipped()
+    /// <summary>
+    /// Fills "Ignored packages": ignored packages, skipped versions that still hide an update, and packages
+    /// excluded from updates with a winget pin. The navigation entry only shows while there are some.
+    /// </summary>
+    private void UpdateIgnored()
     {
-        if (_hiddenUpdates.Count == 0 && !_store.InstalledStateKnown)
-            _hiddenUpdates = new Dictionary<string, string>(_settings.SkippedUpdates, StringComparer.OrdinalIgnoreCase);
-        foreach (var item in _store.All) item.SkippedVersion = _hiddenUpdates.GetValueOrDefault(item.Id);
-        Skipped.Show(_hiddenUpdates.Keys.Select(id => _store.GetOrCreate(id, id)));
-        _skippedNav.BadgeCount = _hiddenUpdates.Count;
-        _skippedNav.IsVisible = _hiddenUpdates.Count > 0;
+        var entries = _settings.SkippedUpdates
+            .Where(s => s.Value == SkippedUpdates.AllVersions || !_store.InstalledStateKnown || _hiddenUpdates.Contains(s.Key))
+            .ToDictionary(s => s.Key, s => s.Value, StringComparer.OrdinalIgnoreCase);
+        foreach (var item in _store.All) item.SkippedVersion = entries.GetValueOrDefault(item.Id);
+        var items = entries.Keys.Select(id => _store.GetOrCreate(id, id))
+            .Concat(_store.All.Where(i => i.IsPinned))
+            .Distinct()
+            .ToList();
+        Skipped.Show(items);
+        _skippedNav.BadgeCount = items.Count;
+        _skippedNav.IsVisible = items.Count > 0;
     }
 
     // ---------- Console (own winget commands) ----------

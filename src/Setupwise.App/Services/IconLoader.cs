@@ -10,18 +10,24 @@ namespace Setupwise.App.Services;
 
 /// <summary>
 /// Loads package icons in the background. Requests are a stack, so the page the user
-/// looks at right now is served first. Runs on the UI thread; I/O is awaited.
+/// looks at right now is served first. Bookkeeping runs on the UI thread; reading and
+/// decoding files and all network I/O run on the thread pool.
 /// </summary>
 public sealed class IconLoader
 {
-    private const int Parallelism = 3;
+    // Downloads from vendor sites are cheap to run side by side; "winget show" (only needed for apps without a
+    // homepage in the catalog) starts a process each time, so fewer of those run at once.
+    private const int Parallelism = 8;
+    private const int WingetParallelism = 3;
 
     private readonly IconService _icons;
     private readonly IPackageManager? _packages;
     private readonly PackageStore _store;
     private readonly Stack<string> _pending = new();
     private readonly HashSet<string> _done = new(StringComparer.OrdinalIgnoreCase);
+    private readonly Queue<TaskCompletionSource> _wingetWaiting = new();
     private int _workers;
+    private int _wingetRunning;
 
     public IconLoader(IconService icons, IPackageManager? packages, PackageStore store)
     {
@@ -39,7 +45,6 @@ public sealed class IconLoader
         foreach (var item in items.Reverse())
         {
             if (item.Icon is not null || _done.Contains(item.Id)) continue;
-            if (TryLoadCached(item)) continue;
             _pending.Push(item.Id);
         }
 
@@ -60,19 +65,6 @@ public sealed class IconLoader
         _done.Clear();
     }
 
-    private bool TryLoadCached(PackageItem item)
-    {
-        var file = _icons.TryGetCached(item.Id);
-        if (file is not null)
-        {
-            var image = Decode(file);
-            if (image is not null) { Apply(item.Id, image); return true; }
-            _icons.Forget(item.Id); // broken file: download again
-        }
-        if (_icons.IsKnownMissing(item.Id)) { _done.Add(item.Id); return true; }
-        return false;
-    }
-
     private async Task WorkAsync()
     {
         try
@@ -81,7 +73,7 @@ public sealed class IconLoader
             {
                 var id = _pending.Pop();
                 if (!_done.Add(id)) continue;
-                await LoadAsync(id);
+                await LoadAsync(id, _store.Find(id)?.Homepage);
             }
         }
         finally
@@ -90,14 +82,25 @@ public sealed class IconLoader
         }
     }
 
-    private async Task LoadAsync(string id)
+    private async Task LoadAsync(string id, Uri? knownHomepage)
     {
-        if (_packages is null) return;
         try
         {
-            var homepage = await _packages.GetHomepageAsync(id);
-            var file = homepage is null ? null : await _icons.DownloadAsync(id, homepage, CancellationToken.None);
-            var image = file is null ? null : Decode(file);
+            // Cache first: no network, and the file is read and decoded off the UI thread.
+            var cached = await Task.Run(() => LoadCached(id));
+            if (cached.Image is not null)
+            {
+                Apply(id, cached.Image);
+                return;
+            }
+            if (cached.KnownMissing || _packages is null) return;
+
+            var homepage = knownHomepage ?? await GetHomepageAsync(id);
+            var image = homepage is null ? null : await Task.Run(async () =>
+            {
+                var file = await _icons.DownloadAsync(id, homepage, CancellationToken.None).ConfigureAwait(false);
+                return file is null ? null : Decode(file);
+            });
             if (image is null)
             {
                 _icons.Forget(id);
@@ -112,13 +115,50 @@ public sealed class IconLoader
         }
     }
 
+    /// <summary>At most <see cref="WingetParallelism"/> "winget show" at once (UI thread only, so no lock).</summary>
+    private async Task<Uri?> GetHomepageAsync(string id)
+    {
+        if (_wingetRunning >= WingetParallelism)
+        {
+            var turn = new TaskCompletionSource();
+            _wingetWaiting.Enqueue(turn);
+            await turn.Task;
+        }
+        else
+        {
+            _wingetRunning++;
+        }
+        try
+        {
+            return await _packages!.GetHomepageAsync(id);
+        }
+        finally
+        {
+            // Hand the slot to the next waiting request, or free it.
+            if (_wingetWaiting.TryDequeue(out var next)) next.SetResult();
+            else _wingetRunning--;
+        }
+    }
+
+    private (ImageSource? Image, bool KnownMissing) LoadCached(string id)
+    {
+        var file = _icons.TryGetCached(id);
+        if (file is not null)
+        {
+            var image = Decode(file);
+            if (image is not null) return (image, false);
+            _icons.Forget(id); // broken file: download again
+        }
+        return (null, _icons.IsKnownMissing(id));
+    }
+
     private void Apply(string id, ImageSource image)
     {
         _done.Add(id);
         if (_store.Find(id) is { } item) item.Icon = image;
     }
 
-    /// <summary>Decodes PNG/ICO/JPG/…; for .ico files the largest frame is used.</summary>
+    /// <summary>Decodes PNG/ICO/JPG/…; for .ico files the largest frame is used. Frozen, so any thread may decode.</summary>
     private static BitmapFrame? Decode(string file)
     {
         try

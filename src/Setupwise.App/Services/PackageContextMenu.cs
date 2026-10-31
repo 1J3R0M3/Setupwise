@@ -146,11 +146,20 @@ public static class PackageContextMenu
             skip.Click += (_, _) => actions.SkipUpdate(item);
             menu.Items.Add(skip);
         }
-        else if (actions.IsUpdateSkipped(item))
+        if (actions.IsUpdateSkipped(item))
         {
-            var unskip = new MenuItem { Header = Loc.F("Menu_UnskipVersion", item.SkippedVersion ?? string.Empty), Icon = new SymbolIcon(SymbolRegular.ArrowSync24) };
+            var header = item.SkippedVersion == SkippedUpdates.AllVersions
+                ? Loc.T("Menu_Unignore")
+                : Loc.F("Menu_UnskipVersion", item.SkippedVersion ?? string.Empty);
+            var unskip = new MenuItem { Header = header, Icon = new SymbolIcon(SymbolRegular.Eye24) };
             unskip.Click += async (_, _) => await actions.UnskipUpdateAsync(item);
             menu.Items.Add(unskip);
+        }
+        else if (update || item.IsInstalled)
+        {
+            var ignore = new MenuItem { Header = Loc.T("Menu_Ignore"), Icon = new SymbolIcon(SymbolRegular.EyeOff24) };
+            ignore.Click += (_, _) => actions.IgnorePackage(item);
+            menu.Items.Add(ignore);
         }
     }
 

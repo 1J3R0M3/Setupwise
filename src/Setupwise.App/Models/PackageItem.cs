@@ -86,6 +86,9 @@ public sealed partial class PackageItem : ObservableObject
 
     public Brush TileBrush { get; }
 
+    /// <summary>Vendor homepage from the catalog (for the icon); null = ask winget.</summary>
+    public Uri? Homepage { get; set; }
+
     public string Initial => Name.FirstOrDefault(char.IsLetterOrDigit) is var c and not '\0'
         ? char.ToUpperInvariant(c).ToString()
         : "?";
@@ -94,12 +97,13 @@ public sealed partial class PackageItem : ObservableObject
 
     public OperationKind Kind => HasUpdate ? OperationKind.Upgrade : OperationKind.Install;
 
-    /// <summary>The update version the user skipped, while it is skipped.</summary>
+    /// <summary>The version the user skipped, or <see cref="SkippedUpdates.AllVersions"/> for an ignored package.</summary>
     [ObservableProperty]
     [NotifyPropertyChangedFor(nameof(VersionText))]
     public partial string? SkippedVersion { get; set; }
 
     public string? VersionText => HasUpdate ? $"{Version}  →  {AvailableVersion}"
+        : SkippedVersion == SkippedUpdates.AllVersions ? $"{Version}  ·  {Loc.T("Ignored_All")}"
         : SkippedVersion is not null ? $"{Version}  ·  {Loc.F("Skipped_Version", SkippedVersion)}"
         : Version;
 

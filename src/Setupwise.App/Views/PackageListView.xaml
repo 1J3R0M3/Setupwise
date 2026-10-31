@@ -51,7 +51,7 @@
               <ui:Button Content="{loc:Tr Updates_Refresh}" Icon="{ui:SymbolIcon ArrowClockwise24}" Command="{Binding RefreshCommand}" />
             </DataTemplate>
 
-            <DataTemplate DataType="{x:Type vm:SkippedUpdatesViewModel}">
+            <DataTemplate DataType="{x:Type vm:IgnoredPackagesViewModel}">
               <ui:Button Content="{loc:Tr Skipped_ShowAll}" Icon="{ui:SymbolIcon ArrowSync24}" Command="{Binding ShowAllAgainCommand}" />
             </DataTemplate>
 

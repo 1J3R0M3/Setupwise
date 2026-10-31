@@ -30,10 +30,13 @@ public interface IPackageActions
     /// <summary>Hides the currently available update until a newer version appears.</summary>
     void SkipUpdate(PackageItem item);
 
-    /// <summary>True while an update of this app is hidden by "Skip this version".</summary>
+    /// <summary>Ignores every update of this package (like UniGetUI), until the user undoes it.</summary>
+    void IgnorePackage(PackageItem item);
+
+    /// <summary>True while the package is ignored or one of its versions is skipped.</summary>
     bool IsUpdateSkipped(PackageItem item);
 
-    /// <summary>Shows the skipped update of this app again.</summary>
+    /// <summary>Stops ignoring the package / skipping its version.</summary>
     Task UnskipUpdateAsync(PackageItem item);
 }
 

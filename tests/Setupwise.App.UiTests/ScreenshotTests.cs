@@ -110,7 +110,8 @@ public class ScreenshotTests
         sevenZip.Status = PackageStatus.Failed; sevenZip.StatusText = Loc.F("Status_Failed", "0x8A150011");
         vm.Categories.Create(language == "de" ? "PC von Oma" : "Grandma's PC", [firefox, vlc, store.Find("Zoom.Zoom")!]);
         vm.SetChoice(firefox, new AppInstallChoice { Scope = InstallScope.Machine, Mode = InstallMode.Interactive });
-        vm.SkipUpdate(store.Updates.Last(u => u != firefox)); // fills "Skipped updates"
+        vm.SkipUpdate(store.Updates.Last(u => u != firefox)); // fills "Ignored packages": a skipped version …
+        vm.IgnorePackage(store.Installed.First(i => !i.HasUpdate && i.SkippedVersion is null)); // … and an ignored package
 
         var index = 0;
         foreach (var nav in vm.NavItems.Where(n => !n.IsSeparator && n.Action is null).ToList())

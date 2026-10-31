@@ -227,7 +227,7 @@ public sealed partial class SettingsViewModel : PageViewModel
 
     public string SkippedUpdatesText => _settings.SkippedUpdates.Count == 0
         ? Loc.T("Settings_SkippedNone")
-        : Loc.F("Settings_SkippedDesc", string.Join(", ", _settings.SkippedUpdates.Select(s => $"{s.Key} {s.Value}").Order(StringComparer.OrdinalIgnoreCase)));
+        : Loc.F("Settings_SkippedDesc", string.Join(", ", _settings.SkippedUpdates.Select(s => s.Value == SkippedUpdates.AllVersions ? s.Key : $"{s.Key} {s.Value}").Order(StringComparer.OrdinalIgnoreCase)));
 
     private bool HasSkippedUpdates => _settings.SkippedUpdates.Count > 0;
 

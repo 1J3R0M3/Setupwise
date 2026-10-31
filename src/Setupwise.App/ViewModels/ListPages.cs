@@ -81,22 +81,25 @@ public sealed partial class UpdatesViewModel : PackageListPageViewModel
     }
 }
 
-/// <summary>Updates the user skipped ("Skip this version"); the entry in the navigation only shows while there are some.</summary>
-public sealed partial class SkippedUpdatesViewModel : PackageListPageViewModel
+/// <summary>
+/// "Ignored packages" (like UniGetUI): packages whose updates are ignored, skipped versions and packages excluded from
+/// updates with a winget pin. The entry in the navigation only shows while there are some.
+/// </summary>
+public sealed partial class IgnoredPackagesViewModel : PackageListPageViewModel
 {
     private readonly Func<Task> _showAllAgain;
 
-    public SkippedUpdatesViewModel(PackageStore store, Func<Task> showAllAgain) : base(store, [])
+    public IgnoredPackagesViewModel(PackageStore store, Func<Task> showAllAgain) : base(store, [])
     {
         _showAllAgain = showAllAgain;
     }
 
-    public override string Title => Loc.T("Nav_Skipped");
-    public override SymbolRegular Symbol => SymbolRegular.CalendarCancel24;
-    public override string? Subtitle => Loc.T("Skipped_Subtitle");
-    public override string EmptyText => Loc.T("Settings_SkippedNone");
+    public override string Title => Loc.T("Nav_Ignored");
+    public override SymbolRegular Symbol => SymbolRegular.EyeOff24;
+    public override string? Subtitle => Loc.T("Ignored_Subtitle");
+    public override string EmptyText => Loc.T("Ignored_Empty");
 
-    /// <summary>Shows the apps whose update is skipped.</summary>
+    /// <summary>Shows the ignored packages.</summary>
     public void Show(IEnumerable<PackageItem> items)
     {
         Items.Clear();

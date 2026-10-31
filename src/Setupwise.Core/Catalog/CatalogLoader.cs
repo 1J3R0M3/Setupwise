@@ -52,6 +52,8 @@ public static partial class CatalogLoader
             if (!categoryIds.Contains(app.Category ?? string.Empty))
                 errors.Add($"App '{app.Id}' uses unknown category '{app.Category}'.");
             if (app.Description is not null) RequireEnglish(app.Description, $"app '{app.Id}' description", errors);
+            if (app.Homepage is { } homepage && (!homepage.IsAbsoluteUri || homepage.Scheme is not ("http" or "https")))
+                errors.Add($"App '{app.Id}' has an invalid homepage '{homepage}'.");
         }
 
         var profileIds = new HashSet<string>(StringComparer.OrdinalIgnoreCase);

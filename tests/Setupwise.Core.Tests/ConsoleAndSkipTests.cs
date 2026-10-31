@@ -30,4 +30,14 @@ public class ConsoleAndSkipTests
         Assert.Equal(["VideoLAN.VLC"], SkippedUpdates.Remove(upgrades, skipped).Select(u => u.Id));
         Assert.False(SkippedUpdates.IsSkipped(new InstalledPackage("Git.Git", "Git", "2.50.0", "2.52.0"), skipped));
     }
+
+    [Fact]
+    public void An_ignored_package_hides_every_update()
+    {
+        var skipped = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase) { ["Git.Git"] = SkippedUpdates.AllVersions };
+
+        Assert.True(SkippedUpdates.IsSkipped(new InstalledPackage("Git.Git", "Git", "2.50.0", "2.51.0"), skipped));
+        Assert.True(SkippedUpdates.IsSkipped(new InstalledPackage("git.git", "Git", "2.50.0", "3.0.0"), skipped));
+        Assert.False(SkippedUpdates.IsSkipped(new InstalledPackage("VideoLAN.VLC", "VLC", "3.0.20", "3.0.21"), skipped));
+    }
 }
