@@ -94,6 +94,7 @@ public sealed partial class MainViewModel : ObservableObject, IPackageActions
     private readonly HttpClient _http;
     private readonly NavItem _selectionNav;
     private readonly NavItem _updatesNav;
+    private readonly NavItem _skippedNav;
     private readonly NavItem _installedNav;
     private readonly NavItem _newCategoryNav;
     private readonly NavItem _ownCategoriesHeader;
@@ -117,6 +118,8 @@ public sealed partial class MainViewModel : ObservableObject, IPackageActions
             var item = store.GetOrCreate(app.Id, app.Name.Get(Loc.Instance.Culture));
             item.Description = app.Description?.Get(Loc.Instance.Culture);
         }
+        foreach (var item in store.All) ApplyChoice(item);
+        store.ItemCreated += (_, item) => ApplyChoice(item);
 
         _categories = new UserCategoriesService(store, AppPaths.CategoriesFile);
         _categories.Load();
@@ -127,21 +130,26 @@ public sealed partial class MainViewModel : ObservableObject, IPackageActions
         Selection = new SelectionViewModel(store, _categories);
         Search = new SearchViewModel(packages, store, icons);
         Updates = new UpdatesViewModel(store, RefreshInstalledAsync);
+        Skipped = new SkippedUpdatesViewModel(store, ResetSkippedUpdatesAsync);
         Installed = new InstalledViewModel(store, RefreshInstalledAsync);
         Settings = new SettingsViewModel(settings, icons, (packages as WingetCli)?.ExecutablePath, ShowInfo, ResetSkippedUpdatesAsync);
 
         _selectionNav = new NavItem(Selection);
         _updatesNav = new NavItem(Updates);
+        _skippedNav = new NavItem(Skipped);
         _installedNav = new NavItem(Installed);
         NavItems.Add(new NavItem(Home));
         NavItems.Add(_selectionNav);
         NavItems.Add(new NavItem(Search));
         NavItems.Add(_updatesNav);
+        NavItems.Add(_skippedNav);
         NavItems.Add(_installedNav);
+        UpdateSkipped();
 
         // Two foldable sections, so the list stays short with many categories (state is remembered).
         var catalogExpanded = !settings.CollapsedNavGroups.Contains(CatalogGroup);
-        NavItems.Add(NavItem.ForHeader(Loc.T("Nav_Categories"), CatalogGroup, catalogExpanded, ToggleNavGroup));
+        var catalogHeader = NavItem.ForHeader(Loc.T("Nav_Categories"), CatalogGroup, catalogExpanded, ToggleNavGroup);
+        NavItems.Add(catalogHeader);
         foreach (var category in catalog.Categories)
         {
             var page = new CategoryViewModel(category, store, catalog.AppsIn(category.Id).Select(a => store.GetOrCreate(a.Id, a.Name.Get(Loc.Instance.Culture))));
@@ -162,13 +170,46 @@ public sealed partial class MainViewModel : ObservableObject, IPackageActions
         SelectedNav = NavItems[0];
         OnSelectionChanged();
         PackageActions.Current = this;
+
+        // Each step shows the page it talks about.
+        var homeNav = NavItems[0];
+        var firstCategory = NavItems.FirstOrDefault(n => n.Page is CategoryViewModel);
+        void ShowCategory()
+        {
+            SetNavGroupExpanded(catalogHeader, true);
+            SelectedNav = firstCategory ?? homeNav;
+        }
+        Tour = new TourViewModel(
+        [
+            new("Welcome", SymbolRegular.HandWave24, () => SelectedNav = homeNav),
+            new("Profiles", SymbolRegular.Star24, () => SelectedNav = homeNav),
+            new("Categories", SymbolRegular.CheckboxChecked24, ShowCategory),
+            new("RightClick", SymbolRegular.CursorClick24, ShowCategory),
+            new("Selection", SymbolRegular.TaskListSquareLtr24, () => SelectedNav = _selectionNav),
+            new("Install", SymbolRegular.ArrowDownload24, () => SelectedNav = _selectionNav),
+            new("Updates", SymbolRegular.ArrowSync24, () => SelectedNav = _updatesNav),
+            new("Done", SymbolRegular.CheckmarkCircle24, () => SelectedNav = homeNav),
+        ], () =>
+        {
+            _settings.TourSeen = true;
+            _settings.Save();
+        });
+        Home.StartTourCommand = Tour.StartCommand;
+        Home.BrowseCommand = new RelayCommand(ShowCategory);
+        Home.ShowSelectionCommand = new RelayCommand(() => SelectedNav = _selectionNav);
+        Home.ShowUpdatesCommand = new RelayCommand(() => SelectedNav = _updatesNav);
+        Settings.StartTourCommand = Tour.StartCommand;
+        if (!settings.TourSeen) Tour.Start();
     }
+
+    public TourViewModel Tour { get; }
 
     public UserCategoriesService Categories => _categories;
     public HomeViewModel Home { get; }
     public SelectionViewModel Selection { get; }
     public SearchViewModel Search { get; }
     public UpdatesViewModel Updates { get; }
+    public SkippedUpdatesViewModel Skipped { get; }
     public InstalledViewModel Installed { get; }
     public SettingsViewModel Settings { get; }
 
@@ -289,16 +330,40 @@ public sealed partial class MainViewModel : ObservableObject, IPackageActions
     }
 
     [RelayCommand(CanExecute = nameof(CanInstall))]
-    private Task InstallAsync() => RunQueueAsync(_store.Selected.ToList(), _settings.Install);
+    private Task InstallAsync() => RunQueueAsync(_store.Selected.ToList(), OptionsFor);
 
-    public async Task RunNowAsync(PackageItem item, InstallOptions options)
+    public async Task RunNowAsync(PackageItem item)
     {
         ArgumentNullException.ThrowIfNull(item);
         if (!CanRun) return;
-        await RunQueueAsync([item], options);
+        await RunQueueAsync([item], OptionsFor);
     }
 
-    private async Task RunQueueAsync(List<PackageItem> queue, InstallOptions options)
+    public async Task RetryAsync(PackageItem item, RetryVariant variant)
+    {
+        ArgumentNullException.ThrowIfNull(item);
+        if (!CanRun) return;
+        AppLog.Write($"Retrying {item.Name} ({item.Id}): {variant}");
+        await RunQueueAsync([item], i => RetryVariants.Apply(OptionsFor(i), variant));
+    }
+
+    /// <summary>The settings plus what the user chose for this app in its context menu.</summary>
+    private InstallOptions OptionsFor(PackageItem item) => item.Choice?.ApplyTo(_settings.Install) ?? _settings.Install;
+
+    public void SetChoice(PackageItem item, AppInstallChoice choice)
+    {
+        ArgumentNullException.ThrowIfNull(item);
+        ArgumentNullException.ThrowIfNull(choice);
+        if (choice.IsEmpty) _settings.AppChoices.Remove(item.Id);
+        else _settings.AppChoices[item.Id] = choice;
+        _settings.Save();
+        item.Choice = choice.IsEmpty ? null : choice;
+        AppLog.Write($"{item.Name} ({item.Id}): install for {choice.Scope?.ToString() ?? "setting"}, mode {choice.Mode?.ToString() ?? "setting"}");
+    }
+
+    private void ApplyChoice(PackageItem item) => item.Choice = _settings.AppChoices.GetValueOrDefault(item.Id);
+
+    private async Task RunQueueAsync(List<PackageItem> queue, Func<PackageItem, InstallOptions> optionsFor)
     {
         if (_packages is null || queue.Count == 0) return;
         using var cancellation = new CancellationTokenSource();
@@ -345,7 +410,7 @@ public sealed partial class MainViewModel : ObservableObject, IPackageActions
                 OverallProgress = (index + (p.Fraction ?? 0)) / queue.Count;
             });
 
-            var result = await _packages.RunAsync(item.Id, kind, options, progress, line => AppLog.Write("    " + line), cancellation.Token);
+            var result = await _packages.RunAsync(item.Id, kind, optionsFor(item), progress, line => AppLog.Write("    " + line), cancellation.Token);
             hashMismatch |= result.Outcome == OperationOutcome.HashMismatch;
             inUse |= result.Outcome == OperationOutcome.AppInUse;
 
@@ -459,6 +524,10 @@ public sealed partial class MainViewModel : ObservableObject, IPackageActions
             var shown = SkippedUpdates.Remove(upgrades, _settings.SkippedUpdates);
             _store.ApplyInstalled(installed, shown, pinned);
             _updatesNav.BadgeCount = _store.Updates.Count;
+            _hiddenUpdates = upgrades.Where(u => SkippedUpdates.IsSkipped(u, _settings.SkippedUpdates))
+                .ToDictionary(u => u.Id, u => u.AvailableVersion ?? string.Empty, StringComparer.OrdinalIgnoreCase);
+            UpdateSkipped();
+            Home.RefreshUpdates();
             AppLog.Write($"{installed.Count} installed apps, {upgrades.Count} updates available ({upgrades.Count - shown.Count} skipped), {pinned.Count} excluded from updates");
             _icons.Request(_store.Updates);
             OnSelectionChanged();
@@ -553,6 +622,8 @@ public sealed partial class MainViewModel : ObservableObject, IPackageActions
         item.IsSelected = false;
         _store.HideUpdate(item);
         _updatesNav.BadgeCount = _store.Updates.Count;
+        _hiddenUpdates[item.Id] = version;
+        UpdateSkipped();
         OnSelectionChanged();
         Settings.RefreshSkippedUpdates();
         ShowInfo(InfoMessage.Info(Loc.T("Skip_DoneTitle"), Loc.F("Skip_Done", item.Name, version)));
@@ -563,7 +634,39 @@ public sealed partial class MainViewModel : ObservableObject, IPackageActions
     {
         _settings.SkippedUpdates.Clear();
         _settings.Save();
+        _hiddenUpdates.Clear();
+        UpdateSkipped();
+        Settings.RefreshSkippedUpdates();
+        if (SelectedNav == _skippedNav) SelectedNav = _updatesNav;
         await RefreshInstalledAsync();
+    }
+
+    /// <summary>Shows the skipped update of this app again (context menu on the "Skipped updates" page).</summary>
+    public async Task UnskipUpdateAsync(PackageItem item)
+    {
+        ArgumentNullException.ThrowIfNull(item);
+        _settings.SkippedUpdates.Remove(item.Id);
+        _settings.Save();
+        _hiddenUpdates.Remove(item.Id);
+        UpdateSkipped();
+        Settings.RefreshSkippedUpdates();
+        if (SelectedNav == _skippedNav && _hiddenUpdates.Count == 0) SelectedNav = _updatesNav;
+        await RefreshInstalledAsync();
+    }
+
+    public bool IsUpdateSkipped(PackageItem item) => item is not null && _hiddenUpdates.ContainsKey(item.Id);
+
+    /// <summary>Updates hidden by "Skip this version" right now: package id → version. Until winget was asked, the settings.</summary>
+    private Dictionary<string, string> _hiddenUpdates = new(StringComparer.OrdinalIgnoreCase);
+
+    private void UpdateSkipped()
+    {
+        if (_hiddenUpdates.Count == 0 && !_store.InstalledStateKnown)
+            _hiddenUpdates = new Dictionary<string, string>(_settings.SkippedUpdates, StringComparer.OrdinalIgnoreCase);
+        foreach (var item in _store.All) item.SkippedVersion = _hiddenUpdates.GetValueOrDefault(item.Id);
+        Skipped.Show(_hiddenUpdates.Keys.Select(id => _store.GetOrCreate(id, id)));
+        _skippedNav.BadgeCount = _hiddenUpdates.Count;
+        _skippedNav.IsVisible = _hiddenUpdates.Count > 0;
     }
 
     // ---------- Console (own winget commands) ----------

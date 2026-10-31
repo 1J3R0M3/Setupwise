@@ -28,6 +28,7 @@ Size: **S** = hours, **M** = a day or two, **L** = several days, needs design an
 | R-17 | [Release policy](#r-17-release-policy) | – | proposal below |
 | R-18 | [Catalog based on WinUtil](#r-18-catalog-based-on-winutil) | M | done (unreleased) |
 | R-19 | [Windows tweaks (installer build only)](#r-19-windows-tweaks-installer-build-only) | L | open |
+| R-20 | [Usability pass](#r-20-usability-pass) | M | built (branch `feature/r20-usability`), needs a test on Windows |
 
 ---
 
@@ -300,3 +301,21 @@ security features (Defender, SmartScreen, UAC, Windows Update) stay out or need 
 `config/tweaks.json` (MIT) can be the source; credit it like the catalog.
 
 **Size:** L – needs real testing on Windows for each tweak and its undo.
+
+## R-20 Usability pass
+
+**Wanted (maintainer):** clearer and more intuitive to use, so a normal user knows what to do where.
+
+**Built:**
+- **Per-app options in the context menu:** *Install for* (as in the settings / only for me / all users) and
+  *Installation mode* (silent / with progress / with installer wizard). The choice is kept per app
+  (`AppChoices` in `settings.json`), shown as a small pill on the card and used for every later install or update.
+  Architecture and installer language stay settings only. The old one-off *Install with* submenu is gone.
+- **Only when something failed:** *Try again* in the context menu of a failed app – with the same options, with the
+  installer wizard (to see its error), with `--force` or with `--skip-dependencies`. The error message points there.
+- **Skipped updates in the navigation:** an entry right below *Updates*, only visible while updates are skipped, with a
+  count badge; *Show all again* and *Show update again* per app.
+- **Start page:** welcome banner with *Browse apps* and *Take the tour*, "How it works" in three steps (with the number
+  of apps, the selection and the available updates as links), then the profiles.
+- **Welcome tour:** eight short steps that each show the page they talk about; starts by itself on the first start,
+  *Skip* / Esc at any step, can be started again from the start page and *Settings → Advanced*.

@@ -213,6 +213,15 @@
         <ui:Button Content="{loc:Tr Settings_RestartAdmin}" Command="{Binding RestartAsAdministratorCommand}"
                    Visibility="{Binding IsAdministrator, Converter={StaticResource InverseBoolToVisibility}}" />
       </ui:CardControl>
+      <ui:CardControl Style="{StaticResource SettingRow}" Icon="{ui:SymbolIcon CompassNorthwest24}">
+        <ui:CardControl.Header>
+          <StackPanel>
+            <TextBlock Text="{loc:Tr Settings_Tour}" />
+            <TextBlock Text="{loc:Tr Settings_TourDesc}" Style="{StaticResource Caption}" />
+          </StackPanel>
+        </ui:CardControl.Header>
+        <ui:Button Content="{loc:Tr Home_StartTour}" Icon="{ui:SymbolIcon Play24}" Command="{Binding StartTourCommand}" />
+      </ui:CardControl>
       <ui:CardControl Style="{StaticResource SettingRow}" Icon="{ui:SymbolIcon DocumentBulletList24}">
         <ui:CardControl.Header>
           <StackPanel>

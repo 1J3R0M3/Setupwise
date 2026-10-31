@@ -220,6 +220,9 @@ public sealed partial class SettingsViewModel : PageViewModel
         _settings.Save();
     }
 
+    /// <summary>Starts the welcome tour again (set by the main view model).</summary>
+    [ObservableProperty] public partial IRelayCommand? StartTourCommand { get; set; }
+
     // ---------- Skipped updates ----------
 
     public string SkippedUpdatesText => _settings.SkippedUpdates.Count == 0

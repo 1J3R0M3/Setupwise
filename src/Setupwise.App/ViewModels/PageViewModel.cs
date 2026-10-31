@@ -36,7 +36,12 @@ public abstract partial class PackageListPageViewModel : PageViewModel
 
     public bool HasItems => Items.Count > 0;
 
-    public string CountText => Items.Count == 0 ? string.Empty : Loc.F("List_Count", Items.Count);
+    public string CountText => Items.Count switch
+    {
+        0 => string.Empty,
+        1 => Loc.T("List_CountOne"),
+        var n => Loc.F("List_Count", n),
+    };
 
     public abstract string EmptyText { get; }
 

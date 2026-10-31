@@ -9,8 +9,9 @@ using MenuItem = System.Windows.Controls.MenuItem;
 namespace Setupwise.App.Services;
 
 /// <summary>
-/// Right-click menu of a package card: install or update the app right away (also with one-off
-/// winget options), exclude it from updates, skip a version, add it to one of the user's categories
+/// Right-click menu of a package card: install or update the app right away, retry it with extra options
+/// after it failed, choose "Install for" / installation mode for this app (kept), exclude it from updates,
+/// skip a version, add it to one of the user's categories
 /// (checked = already in there, click again to remove) or create a new category with it.
 /// Attached in XAML with <c>services:PackageContextMenu.IsEnabled="True"</c>.
 /// </summary>
@@ -80,17 +81,35 @@ public static class PackageContextMenu
             Icon = new SymbolIcon(update ? SymbolRegular.ArrowSync24 : SymbolRegular.ArrowDownload24),
             IsEnabled = canRun,
         };
-        now.Click += async (_, _) => await actions.RunNowAsync(item, actions.DefaultOptions);
+        now.Click += async (_, _) => await actions.RunNowAsync(item);
         menu.Items.Add(now);
 
-        // One-off variants of the options from the settings.
-        var with = new MenuItem { Header = Loc.T(update ? "Menu_UpdateWith" : "Menu_InstallWith"), Icon = new SymbolIcon(SymbolRegular.Options24), IsEnabled = canRun };
+        // Options that are only needed when something went wrong.
+        if (item.Status == PackageStatus.Failed)
+        {
+            var retry = new MenuItem { Header = Loc.T("Menu_Retry"), Icon = new SymbolIcon(SymbolRegular.ArrowRepeatAll24), IsEnabled = canRun };
+            AddRetry(retry, item, actions, "Menu_Retry_Plain", RetryVariant.Plain);
+            AddRetry(retry, item, actions, "Menu_Retry_Interactive", RetryVariant.Interactive);
+            AddRetry(retry, item, actions, "Menu_Retry_Force", RetryVariant.Force);
+            AddRetry(retry, item, actions, "Menu_Retry_SkipDependencies", RetryVariant.SkipDependencies);
+            menu.Items.Add(retry);
+        }
+
+        // Kept for this app: every later install or update uses it.
+        var choice = item.Choice ?? new AppInstallChoice();
         var defaults = actions.DefaultOptions;
-        AddVariant(with, item, actions, "Menu_With_Interactive", defaults with { Mode = InstallMode.Interactive });
-        AddVariant(with, item, actions, "Menu_With_User", defaults with { Scope = InstallScope.User });
-        AddVariant(with, item, actions, "Menu_With_Machine", defaults with { Scope = InstallScope.Machine });
-        AddVariant(with, item, actions, "Menu_With_Force", defaults with { Force = true });
-        menu.Items.Add(with);
+        menu.Items.Add(new Separator());
+        var scope = new MenuItem { Header = Loc.T("Menu_Scope"), Icon = new SymbolIcon(SymbolRegular.People24) };
+        AddChoice(scope, item, actions, Loc.F("Menu_FromSettings", ScopeName(defaults.Scope)), choice.Scope is null, choice with { Scope = null });
+        AddChoice(scope, item, actions, Loc.T("Install_Scope_User"), choice.Scope == InstallScope.User, choice with { Scope = InstallScope.User });
+        AddChoice(scope, item, actions, Loc.T("Install_Scope_Machine"), choice.Scope == InstallScope.Machine, choice with { Scope = InstallScope.Machine });
+        menu.Items.Add(scope);
+
+        var mode = new MenuItem { Header = Loc.T("Menu_Mode"), Icon = new SymbolIcon(SymbolRegular.WindowSettings20) };
+        AddChoice(mode, item, actions, Loc.F("Menu_FromSettings", ModeName(defaults.Mode)), choice.Mode is null, choice with { Mode = null });
+        foreach (var value in new[] { InstallMode.Silent, InstallMode.Default, InstallMode.Interactive })
+            AddChoice(mode, item, actions, ModeName(value), choice.Mode == value, choice with { Mode = value });
+        menu.Items.Add(mode);
 
         if (item.IsInstalled)
         {
@@ -112,12 +131,39 @@ public static class PackageContextMenu
             skip.Click += (_, _) => actions.SkipUpdate(item);
             menu.Items.Add(skip);
         }
+        else if (actions.IsUpdateSkipped(item))
+        {
+            var unskip = new MenuItem { Header = Loc.F("Menu_UnskipVersion", item.SkippedVersion ?? string.Empty), Icon = new SymbolIcon(SymbolRegular.ArrowSync24) };
+            unskip.Click += async (_, _) => await actions.UnskipUpdateAsync(item);
+            menu.Items.Add(unskip);
+        }
     }
 
-    private static void AddVariant(MenuItem parent, PackageItem item, IPackageActions actions, string key, InstallOptions options)
+    private static void AddRetry(MenuItem parent, PackageItem item, IPackageActions actions, string key, RetryVariant variant)
     {
         var entry = new MenuItem { Header = Loc.T(key) };
-        entry.Click += async (_, _) => await actions.RunNowAsync(item, options);
+        entry.Click += async (_, _) => await actions.RetryAsync(item, variant);
         parent.Items.Add(entry);
     }
+
+    private static void AddChoice(MenuItem parent, PackageItem item, IPackageActions actions, string header, bool isChecked, AppInstallChoice choice)
+    {
+        var entry = new MenuItem { Header = header, IsCheckable = true, IsChecked = isChecked };
+        entry.Click += (_, _) => actions.SetChoice(item, choice);
+        parent.Items.Add(entry);
+    }
+
+    private static string ScopeName(InstallScope scope) => scope switch
+    {
+        InstallScope.User => Loc.T("Install_Scope_User"),
+        InstallScope.Machine => Loc.T("Install_Scope_Machine"),
+        _ => Loc.T("Option_Auto"),
+    };
+
+    private static string ModeName(InstallMode mode) => Loc.T(mode switch
+    {
+        InstallMode.Interactive => "Choice_Interactive",
+        InstallMode.Default => "Choice_Progress",
+        _ => "Choice_Silent",
+    });
 }

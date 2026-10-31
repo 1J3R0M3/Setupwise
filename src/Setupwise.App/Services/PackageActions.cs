@@ -9,17 +9,29 @@ public interface IPackageActions
     /// <summary>False while the queue or a console command runs, or without winget.</summary>
     bool CanRun { get; }
 
-    /// <summary>The winget options from the settings, as the base for one-off variants.</summary>
+    /// <summary>The winget options from the settings; the app's own choice is applied on top.</summary>
     InstallOptions DefaultOptions { get; }
 
-    /// <summary>Installs or updates just this app right away.</summary>
-    Task RunNowAsync(PackageItem item, InstallOptions options);
+    /// <summary>Installs or updates just this app right away, with the settings and the app's own choice.</summary>
+    Task RunNowAsync(PackageItem item);
+
+    /// <summary>Runs this app again after it failed, with one extra option.</summary>
+    Task RetryAsync(PackageItem item, RetryVariant variant);
+
+    /// <summary>Remembers "Install for" / installation mode for this app (empty choice = back to the settings).</summary>
+    void SetChoice(PackageItem item, AppInstallChoice choice);
 
     /// <summary>Excludes the app from updates (winget pin) or allows updates again.</summary>
     Task SetPinnedAsync(PackageItem item, bool pinned);
 
     /// <summary>Hides the currently available update until a newer version appears.</summary>
     void SkipUpdate(PackageItem item);
+
+    /// <summary>True while an update of this app is hidden by "Skip this version".</summary>
+    bool IsUpdateSkipped(PackageItem item);
+
+    /// <summary>Shows the skipped update of this app again.</summary>
+    Task UnskipUpdateAsync(PackageItem item);
 }
 
 public static class PackageActions

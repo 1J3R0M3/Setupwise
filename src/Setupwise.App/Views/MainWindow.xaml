@@ -15,6 +15,11 @@
                  WindowBackdropType="Mica"
                  WindowCornerPreference="Round">
 
+  <ui:FluentWindow.InputBindings>
+    <!-- Esc leaves the welcome tour -->
+    <KeyBinding Key="Escape" Command="{Binding Tour.CloseCommand}" />
+  </ui:FluentWindow.InputBindings>
+
   <ui:FluentWindow.Resources>
     <!-- Pages are view models; these templates pick the matching view -->
     <DataTemplate DataType="{x:Type vm:HomeViewModel}">
@@ -192,6 +197,65 @@
           <!-- Current page -->
           <ContentControl x:Name="PageHost" Content="{Binding CurrentPage}" Focusable="False" />
         </DockPanel>
+      </Border>
+    </Grid>
+
+    <!-- Welcome tour: the page it talks about stays visible behind a light shade -->
+    <Grid Grid.Row="1" x:Name="TourLayer" DataContext="{Binding Tour}"
+          Visibility="{Binding IsOpen, Converter={StaticResource BoolToVisibility}}">
+      <Rectangle Fill="Black" Opacity="0.25" />
+      <Border Width="520" Margin="264,0,0,96" VerticalAlignment="Bottom" HorizontalAlignment="Center" Padding="24,20"
+              CornerRadius="10" BorderThickness="1"
+              Background="{DynamicResource SolidBackgroundFillColorBaseBrush}"
+              BorderBrush="{DynamicResource CardStrokeColorDefaultBrush}">
+        <Border.Effect>
+          <DropShadowEffect BlurRadius="24" ShadowDepth="4" Opacity="0.3" />
+        </Border.Effect>
+        <StackPanel>
+          <DockPanel>
+            <Border DockPanel.Dock="Left" Width="44" Height="44" CornerRadius="10" Margin="0,0,14,0"
+                    Background="{DynamicResource AccentFillColorDefaultBrush}">
+              <ui:SymbolIcon Symbol="{Binding Symbol}" FontSize="24" Filled="True"
+                             Foreground="{DynamicResource TextOnAccentFillColorPrimaryBrush}" />
+            </Border>
+            <ui:Button DockPanel.Dock="Right" VerticalAlignment="Top" Appearance="Transparent" Padding="8"
+                       Icon="{ui:SymbolIcon Dismiss16}" Command="{Binding CloseCommand}" ToolTip="{loc:Tr Tour_Skip}" />
+            <StackPanel VerticalAlignment="Center">
+              <TextBlock Text="{Binding StepText}" Style="{StaticResource Caption}" />
+              <TextBlock Text="{Binding Title}" FontSize="18" FontWeight="SemiBold" TextWrapping="Wrap"
+                         Foreground="{DynamicResource TextFillColorPrimaryBrush}" />
+            </StackPanel>
+          </DockPanel>
+          <TextBlock Margin="0,14,0,0" Text="{Binding Text}" TextWrapping="Wrap" LineHeight="20"
+                     Foreground="{DynamicResource TextFillColorSecondaryBrush}" />
+          <DockPanel Margin="0,20,0,0">
+            <ItemsControl DockPanel.Dock="Left" VerticalAlignment="Center" ItemsSource="{Binding Dots}" Focusable="False">
+              <ItemsControl.ItemsPanel>
+                <ItemsPanelTemplate>
+                  <StackPanel Orientation="Horizontal" />
+                </ItemsPanelTemplate>
+              </ItemsControl.ItemsPanel>
+              <ItemsControl.ItemTemplate>
+                <DataTemplate>
+                  <Ellipse x:Name="Dot" Width="7" Height="7" Margin="0,0,6,0" Fill="{DynamicResource ControlStrongFillColorDisabledBrush}" />
+                  <DataTemplate.Triggers>
+                    <DataTrigger Binding="{Binding}" Value="True">
+                      <Setter TargetName="Dot" Property="Fill" Value="{DynamicResource AccentFillColorDefaultBrush}" />
+                      <Setter TargetName="Dot" Property="Width" Value="18" />
+                    </DataTrigger>
+                  </DataTemplate.Triggers>
+                </DataTemplate>
+              </ItemsControl.ItemTemplate>
+            </ItemsControl>
+            <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
+              <ui:Button Appearance="Transparent" Content="{loc:Tr Tour_Skip}" Command="{Binding CloseCommand}"
+                         Visibility="{Binding IsLast, Converter={StaticResource InverseBoolToVisibility}}" />
+              <ui:Button Margin="8,0,0,0" Content="{loc:Tr Tour_Back}" Command="{Binding BackCommand}"
+                         Visibility="{Binding IsFirst, Converter={StaticResource InverseBoolToVisibility}}" />
+              <ui:Button Margin="8,0,0,0" Appearance="Primary" MinWidth="110" Content="{Binding NextText}" Command="{Binding NextCommand}" />
+            </StackPanel>
+          </DockPanel>
+        </StackPanel>
       </Border>
     </Grid>
   </Grid>

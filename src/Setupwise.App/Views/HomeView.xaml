@@ -10,11 +10,77 @@
              mc:Ignorable="d"
              d:DataContext="{d:DesignInstance vm:HomeViewModel}">
   <ScrollViewer VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
-    <StackPanel Margin="32,24,32,24">
-      <TextBlock Text="{loc:Tr Home_Title}" Style="{StaticResource PageTitle}" />
-      <TextBlock Text="{loc:Tr Home_Subtitle}" Style="{StaticResource PageSubtitle}" MaxWidth="720" HorizontalAlignment="Left" />
+    <StackPanel Margin="32,24,32,24" MaxWidth="1100" HorizontalAlignment="Left">
+      <!-- Welcome -->
+      <Border CornerRadius="12" Padding="28,24" Background="{DynamicResource AccentFillColorDefaultBrush}">
+        <DockPanel>
+          <Border DockPanel.Dock="Left" Width="76" Height="76" Margin="0,0,24,0" CornerRadius="16" VerticalAlignment="Top"
+                  Background="{DynamicResource SolidBackgroundFillColorBaseBrush}">
+            <Image Width="56" Height="56" Source="pack://application:,,,/Setupwise;component/Assets/setupwise-256.png"
+                   RenderOptions.BitmapScalingMode="HighQuality" />
+          </Border>
+          <StackPanel>
+            <TextBlock Text="{loc:Tr Home_Title}" FontSize="28" FontWeight="SemiBold" TextWrapping="Wrap"
+                       Foreground="{DynamicResource TextOnAccentFillColorPrimaryBrush}" />
+            <TextBlock Margin="0,6,0,0" Text="{loc:Tr Home_HeroText}" FontSize="15" TextWrapping="Wrap" MaxWidth="640" HorizontalAlignment="Left"
+                       Foreground="{DynamicResource TextOnAccentFillColorPrimaryBrush}" Opacity="0.9" />
+            <StackPanel Orientation="Horizontal" Margin="0,18,0,0">
+              <ui:Button Background="{DynamicResource SolidBackgroundFillColorBaseBrush}" Foreground="{DynamicResource TextFillColorPrimaryBrush}" Content="{loc:Tr Home_Browse}" Icon="{ui:SymbolIcon AppsList24}" Command="{Binding BrowseCommand}" />
+              <ui:Button Margin="8,0,0,0" Background="{DynamicResource SolidBackgroundFillColorBaseBrush}" Foreground="{DynamicResource TextFillColorPrimaryBrush}" Content="{loc:Tr Home_StartTour}" Icon="{ui:SymbolIcon CompassNorthwest24}" Command="{Binding StartTourCommand}" />
+            </StackPanel>
+          </StackPanel>
+        </DockPanel>
+      </Border>
+
+      <!-- How it works -->
+      <TextBlock Text="{loc:Tr Home_HowTitle}" Style="{StaticResource SectionHeader}" />
+      <UniformGrid Columns="3" Margin="-6,0,-6,0">
+        <Border Style="{StaticResource Card}" Margin="6,0">
+          <StackPanel>
+            <DockPanel>
+              <Border DockPanel.Dock="Left" Width="28" Height="28" CornerRadius="14" Background="{DynamicResource AccentFillColorDefaultBrush}">
+                <TextBlock Text="1" FontWeight="SemiBold" HorizontalAlignment="Center" VerticalAlignment="Center"
+                           Foreground="{DynamicResource TextOnAccentFillColorPrimaryBrush}" />
+              </Border>
+              <TextBlock Margin="10,0,0,0" Text="{loc:Tr Home_Step1_Title}" FontSize="15" FontWeight="SemiBold" VerticalAlignment="Center"
+                         Foreground="{DynamicResource TextFillColorPrimaryBrush}" />
+            </DockPanel>
+            <TextBlock Margin="0,10,0,0" Text="{loc:Tr Home_Step1_Text}" TextWrapping="Wrap" Foreground="{DynamicResource TextFillColorSecondaryBrush}" />
+            <TextBlock Margin="0,10,0,0" Text="{Binding CatalogText}" Style="{StaticResource Caption}" />
+          </StackPanel>
+        </Border>
+        <Border Style="{StaticResource Card}" Margin="6,0">
+          <StackPanel>
+            <DockPanel>
+              <Border DockPanel.Dock="Left" Width="28" Height="28" CornerRadius="14" Background="{DynamicResource AccentFillColorDefaultBrush}">
+                <TextBlock Text="2" FontWeight="SemiBold" HorizontalAlignment="Center" VerticalAlignment="Center"
+                           Foreground="{DynamicResource TextOnAccentFillColorPrimaryBrush}" />
+              </Border>
+              <TextBlock Margin="10,0,0,0" Text="{loc:Tr Home_Step2_Title}" FontSize="15" FontWeight="SemiBold" VerticalAlignment="Center"
+                         Foreground="{DynamicResource TextFillColorPrimaryBrush}" />
+            </DockPanel>
+            <TextBlock Margin="0,10,0,0" Text="{loc:Tr Home_Step2_Text}" TextWrapping="Wrap" Foreground="{DynamicResource TextFillColorSecondaryBrush}" />
+            <ui:Button Margin="-10,4,0,0" Padding="10,4" Appearance="Transparent" BorderThickness="0" Foreground="{DynamicResource AccentTextFillColorPrimaryBrush}" Content="{Binding SelectionText}" Command="{Binding ShowSelectionCommand}" />
+          </StackPanel>
+        </Border>
+        <Border Style="{StaticResource Card}" Margin="6,0">
+          <StackPanel>
+            <DockPanel>
+              <Border DockPanel.Dock="Left" Width="28" Height="28" CornerRadius="14" Background="{DynamicResource AccentFillColorDefaultBrush}">
+                <TextBlock Text="3" FontWeight="SemiBold" HorizontalAlignment="Center" VerticalAlignment="Center"
+                           Foreground="{DynamicResource TextOnAccentFillColorPrimaryBrush}" />
+              </Border>
+              <TextBlock Margin="10,0,0,0" Text="{loc:Tr Home_Step3_Title}" FontSize="15" FontWeight="SemiBold" VerticalAlignment="Center"
+                         Foreground="{DynamicResource TextFillColorPrimaryBrush}" />
+            </DockPanel>
+            <TextBlock Margin="0,10,0,0" Text="{loc:Tr Home_Step3_Text}" TextWrapping="Wrap" Foreground="{DynamicResource TextFillColorSecondaryBrush}" />
+            <ui:Button Margin="-10,4,0,0" Padding="10,4" Appearance="Transparent" BorderThickness="0" Foreground="{DynamicResource AccentTextFillColorPrimaryBrush}" Content="{Binding UpdatesText}" Command="{Binding ShowUpdatesCommand}" />
+          </StackPanel>
+        </Border>
+      </UniformGrid>
 
       <TextBlock Text="{loc:Tr Home_Profiles}" Style="{StaticResource SectionHeader}" />
+      <TextBlock Text="{loc:Tr Home_ProfilesText}" Margin="0,-4,0,12" Foreground="{DynamicResource TextFillColorSecondaryBrush}" TextWrapping="Wrap" />
       <ItemsControl ItemsSource="{Binding Profiles}" Focusable="False">
         <ItemsControl.ItemsPanel>
           <ItemsPanelTemplate>
